@@ -1,0 +1,7 @@
+{
+  "name": "QAXALE",
+  "description": "An Afaan Oromoo-first AI, programming, digital education, and translation platform powered by intelligent assistants and interactive learning.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

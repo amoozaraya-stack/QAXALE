@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#020617"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="30%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-opacity="0.3"/>
+
+  <!-- AI Circuit Nodes in background -->
+  <circle cx="140" cy="140" r="10" fill="#f59e0b" opacity="0.6"/>
+  <circle cx="372" cy="140" r="10" fill="#10b981" opacity="0.6"/>
+  <circle cx="140" cy="372" r="10" fill="#38bdf8" opacity="0.6"/>
+  <circle cx="372" cy="372" r="10" fill="#f59e0b" opacity="0.6"/>
+
+  <path d="M 140 140 L 210 210 M 372 140 L 302 210 M 140 372 L 210 302 M 372 372 L 302 302" stroke="#475569" stroke-width="4" stroke-dasharray="6,6" opacity="0.5"/>
+
+  <!-- Central Emblem "Q" with tech sparks -->
+  <!-- Outer circle of Q -->
+  <circle cx="256" cy="236" r="115" fill="none" stroke="url(#goldGrad)" stroke-width="28" stroke-linecap="round" filter="url(#glow)"/>
+  
+  <!-- Inner ring accent -->
+  <circle cx="256" cy="236" r="82" fill="#020617" stroke="url(#accentGrad)" stroke-width="6" opacity="0.8"/>
+
+  <!-- Q Kick tail -->
+  <path d="M 295 275 L 375 355" stroke="url(#goldGrad)" stroke-width="32" stroke-linecap="round" filter="url(#glow)"/>
+  <path d="M 295 275 L 375 355" stroke="#fef08a" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- Core AI Sparkle in Center -->
+  <polygon points="256,186 266,226 306,236 266,246 256,286 246,246 206,236 246,226" fill="url(#goldGrad)"/>
+
+  <!-- Small text banner at bottom -->
+  <text x="256" y="445" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="900" fill="#f8fafc" text-anchor="middle" letter-spacing="8">QAXALE</text>
+</svg>

@@ -1,0 +1,21 @@
+{
+  "name": "QAXALE - Afaan Oromoo AI & Tech Platform",
+  "short_name": "QAXALE",
+  "description": "Afaan Oromoo-first AI, Programming, Computer Science, and Digital Learning Platform",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait",
+  "scope": "/",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
