@@ -7,6 +7,7 @@ import {
   ChatMessage,
   TranslationHistoryItem,
   UserProgress,
+  ArchitecturePlan,
 } from "../types";
 
 interface AppContextType {
@@ -32,6 +33,11 @@ interface AppContextType {
   setShowDictionaryModal: (show: boolean) => void;
   showInstallModal: boolean;
   setShowInstallModal: (show: boolean) => void;
+  showDataFlowModal: boolean;
+  setShowDataFlowModal: (show: boolean) => void;
+  architecturePlans: ArchitecturePlan[];
+  addArchitecturePlan: (plan: Omit<ArchitecturePlan, "id" | "createdAt">) => void;
+  deleteArchitecturePlan: (id: string) => void;
   deferredPrompt: any;
   handleInstallApp: () => Promise<void>;
   isAppInstalled: boolean;
@@ -84,9 +90,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeTab, setActiveTab] = useState<NavTab>("home");
   const [showDictionaryModal, setShowDictionaryModal] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [showDataFlowModal, setShowDataFlowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
+
+  const [architecturePlans, setArchitecturePlans] = useState<ArchitecturePlan[]>(() => {
+    const saved = localStorage.getItem("qaxale_arch_plans");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return [
+      {
+        id: "plan-sample-1",
+        featureName: "Afaan Oromoo Agricultural Market Price Advisor",
+        userProvides: "Crop name (e.g. 'Bishingaa/Boqqolloo'), location ('Ambo/Jimma')",
+        whereItEnters: "Mobile React Input form in QAXALE App",
+        whereItTravels: "Frontend -> HTTP POST /api/chat -> Cloudflare Worker Control Center -> Gemini 3.7",
+        whatTransformsIt: "Worker attaches secret API key, sanitizes input, Gemini reasons over local yield data",
+        whereItIsStored: "Local state for instant cache, cloud database for history",
+        whatComesBack: "JSON with market price estimate, buyer contacts, storage tips",
+        whatUserSees: "High-contrast breakdown card with actionable selling steps",
+        createdAt: Date.now() - 172800000,
+      },
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("qaxale_arch_plans", JSON.stringify(architecturePlans));
+  }, [architecturePlans]);
+
+  const addArchitecturePlan = (planData: Omit<ArchitecturePlan, "id" | "createdAt">) => {
+    const newPlan: ArchitecturePlan = {
+      ...planData,
+      id: `arch-${Date.now()}`,
+      createdAt: Date.now(),
+    };
+    setArchitecturePlans((prev) => [newPlan, ...prev]);
+    triggerConfetti();
+  };
+
+  const deleteArchitecturePlan = (id: string) => {
+    setArchitecturePlans((prev) => prev.filter((p) => p.id !== id));
+  };
 
   useEffect(() => {
     // Check if running in standalone PWA mode
@@ -364,6 +414,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setShowDictionaryModal,
         showInstallModal,
         setShowInstallModal,
+        showDataFlowModal,
+        setShowDataFlowModal,
+        architecturePlans,
+        addArchitecturePlan,
+        deleteArchitecturePlan,
         deferredPrompt,
         handleInstallApp,
         isAppInstalled,

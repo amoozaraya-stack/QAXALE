@@ -1,8 +1,32 @@
 export type AppLanguage = "om" | "en";
 
-export type NavTab = "home" | "chat" | "learn" | "translate" | "code" | "profile";
+export type NavTab = "home" | "chat" | "interpret" | "learn" | "translate" | "code" | "profile";
 
-export type ChatMode = "standard" | "step-by-step" | "summary" | "brainstorm" | "code-explain";
+export type ChatMode =
+  | "standard"
+  | "step-by-step"
+  | "summary"
+  | "brainstorm"
+  | "code-explain"
+  | "interpret-layers"
+  | "feynman"
+  | "agency-loop"
+  | "socratic"
+  | "first-principles"
+  | "project-creation";
+
+export interface RepresentationLayer {
+  id: string;
+  name: {
+    om: string;
+    en: string;
+  };
+  description: {
+    om: string;
+    en: string;
+  };
+  content?: string;
+}
 
 export interface ChatMessage {
   id: string;
@@ -10,6 +34,8 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
   mode?: ChatMode;
+  layers?: Record<string, string>;
+  agencyStage?: "access" | "interpret" | "understand" | "apply" | "create" | "agency" | "contribute";
 }
 
 export interface Conversation {
@@ -30,6 +56,7 @@ export interface TranslationHistoryItem {
   timestamp: number;
   keyVocabulary?: Array<{ term: string; meaning: string; partOfSpeech?: string }>;
   culturalOrGrammarNotes?: string;
+  conceptualBridge?: string;
 }
 
 export interface QuizQuestion {
@@ -68,6 +95,7 @@ export interface Lesson {
     om: string[];
     en: string[];
   };
+  complexityLevel?: "accessible" | "foundation" | "intermediate" | "advanced" | "expert";
   quiz?: QuizQuestion[];
   codeExample?: {
     language: string;
@@ -89,7 +117,7 @@ export interface Course {
     om: string;
     en: string;
   };
-  category: "programming" | "ai" | "cs" | "digital-tech" | "business" | "knowledge";
+  category: "programming" | "ai" | "cs" | "digital-tech" | "business" | "knowledge" | "reasoning";
   iconName: string;
   color: string;
   level: "Beginner / Jalqabaa" | "Intermediate / Giddu-galeessa" | "Advanced / Olaanaa";
@@ -122,11 +150,24 @@ export interface DictionaryEntry {
   id: string;
   termOromo: string;
   termEnglish: string;
-  category: "AI" | "Programming" | "CS" | "Hardware" | "Internet" | "Data" | "General Tech";
+  category: "AI" | "Programming" | "CS" | "Hardware" | "Internet" | "Data" | "General Tech" | "Reasoning";
   definitionOromo: string;
   definitionEnglish: string;
   exampleSentenceOromo: string;
   exampleSentenceEnglish: string;
+  whyItExists?: string;
+  relatedTerms?: string[];
+}
+
+export interface ProjectBlueprint {
+  id: string;
+  title: string;
+  domain: string;
+  problemSolved: string;
+  targetAudience: string;
+  coreMechanism: string;
+  implementationSteps: string[];
+  localApplication: string;
 }
 
 export interface UserProgress {
@@ -137,4 +178,34 @@ export interface UserProgress {
   lastActiveDate: string;
   bookmarkedTerms: string[];
   solvedQuizzesCount: number;
+  interpretedConceptsCount?: number;
+  projectsCreatedCount?: number;
+}
+
+export interface HttpTelemetryEvent {
+  id: string;
+  timestamp: number;
+  endpoint: string;
+  method: "POST" | "GET";
+  status: number;
+  durationMs: number;
+  requestPayload: Record<string, any>;
+  responsePayload: Record<string, any>;
+  step: number;
+  stageName: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface ArchitecturePlan {
+  id: string;
+  featureName: string;
+  userProvides: string;
+  whereItEnters: string;
+  whereItTravels: string;
+  whatTransformsIt: string;
+  whereItIsStored: string;
+  whatComesBack: string;
+  whatUserSees: string;
+  createdAt: number;
 }

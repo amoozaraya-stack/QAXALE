@@ -14,6 +14,8 @@ import {
   ChevronRight,
   Download,
   Smartphone,
+  Zap,
+  Cpu,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { TECH_DICTIONARY } from "../data/dictionaryData";
@@ -28,6 +30,8 @@ export const ProfileView: React.FC = () => {
     toggleBookmark,
     setShowDictionaryModal,
     setShowInstallModal,
+    setShowDataFlowModal,
+    architecturePlans,
     isAppInstalled,
   } = useApp();
 
@@ -88,6 +92,35 @@ export const ProfileView: React.FC = () => {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Data-Flow & System Architecture Card */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <Cpu className="w-4 h-4 text-amber-400" />
+            <span>{language === "om" ? "Motora Ya'iinsa Ragaa & Telemetry" : "Data-Flow Machine & Telemetry"}</span>
+          </h3>
+          <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-mono">
+            {architecturePlans.length} Plans
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-300">
+          {language === "om"
+            ? "Ergama HTTP, balbala (endpoints), iccitii fi qindaa'ina ragaa qoradhu; karoora teeknikaa gaaffilee 7n qopheessi."
+            : "Inspect live HTTP JSON packets, endpoint routes, secrets, and test the 7 architecture questions."}
+        </p>
+
+        <button
+          onClick={() => setShowDataFlowModal(true)}
+          className="w-full py-2.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/40 border border-indigo-500/40 text-indigo-200 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+        >
+          <Zap className="w-4 h-4 text-amber-400" />
+          <span>
+            {language === "om" ? "Motora Ragaa Bani (Open Data-Flow Machine)" : "Open Data-Flow Machine & Inspector"}
+          </span>
+        </button>
       </div>
 
       {/* App Installation Tile */}

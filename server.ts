@@ -7,9 +7,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// ==========================================
-// 1. Centralized Gemini Model Configuration
-// ==========================================
+// =========================================================================
+// 1. Centralized Gemini Model Configuration with Hardened Failover Chain
+// =========================================================================
 const GEMINI_MODELS = [
   process.env.GEMINI_PRIMARY_MODEL,
   process.env.GEMINI_FALLBACK_MODEL_1,
@@ -19,14 +19,12 @@ const GEMINI_MODELS = [
   "gemini-3.5-flash-lite",
 ].filter(Boolean) as string[];
 
-// Remove duplicate model IDs while preserving precedence order
 const CONFIGURED_MODELS = Array.from(new Set(GEMINI_MODELS));
 
-// Validate API Key on server startup
 if (!process.env.GEMINI_API_KEY) {
-  console.error("[QAXALE SERVER WARNING] GEMINI_API_KEY is missing from environment variables.");
+  console.error("[QAXALE V3 WARNING] GEMINI_API_KEY is missing from environment variables.");
 } else {
-  console.log(`[QAXALE SERVER] Gemini API key detected. Configured model chain: ${CONFIGURED_MODELS.join(", ")}`);
+  console.log(`[QAXALE V3 SERVER] Gemini API key active. Models: ${CONFIGURED_MODELS.join(", ")}`);
 }
 
 function getGeminiApiKey(): string {
@@ -45,7 +43,7 @@ function getGeminiClient(): GoogleGenAI {
       apiKey,
       httpOptions: {
         headers: {
-          "User-Agent": "aistudio-build",
+          "User-Agent": "qaxale-v3-agency-platform",
         },
       },
     });
@@ -53,9 +51,9 @@ function getGeminiClient(): GoogleGenAI {
   return geminiClientInstance;
 }
 
-// ==========================================
-// 2. Types & Request Interfaces
-// ==========================================
+// =========================================================================
+// 2. Types & Data Structures
+// =========================================================================
 export type GeminiMessage = {
   role: "user" | "model";
   parts: Array<{
@@ -71,9 +69,9 @@ interface CallGeminiOptions {
   endpoint?: string;
 }
 
-// ==========================================
-// 3. Conversation History Sanitization
-// ==========================================
+// =========================================================================
+// 3. Conversation History Sanitizer (Ensures robust turn alternation & user first)
+// =========================================================================
 export function sanitizeHistory(history: unknown): GeminiMessage[] {
   if (!Array.isArray(history)) {
     return [];
@@ -88,7 +86,7 @@ export function sanitizeHistory(history: unknown): GeminiMessage[] {
       role?: unknown;
       parts?: unknown;
       text?: unknown;
-      content?: unknown; // Handle frontend { role, content } representation
+      content?: unknown;
     };
 
     const rawRole = message.role;
@@ -136,9 +134,9 @@ export function sanitizeHistory(history: unknown): GeminiMessage[] {
   return cleaned;
 }
 
-// ==========================================
-// 4. Error Classification & Helpers
-// ==========================================
+// =========================================================================
+// 4. Error Classification & Extractors
+// =========================================================================
 function getStatusCode(error: unknown): number | undefined {
   if (!error || typeof error !== "object") return undefined;
 
@@ -157,8 +155,6 @@ function getStatusCode(error: unknown): number | undefined {
 
 function isRetryable(error: unknown): boolean {
   const status = getStatusCode(error);
-
-  // Statuses that are considered transient or rate-limited
   return (
     status === 429 ||
     status === 500 ||
@@ -198,22 +194,28 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ==========================================
-// 5. Centralized Reusable Gemini Calling Logic
-// ==========================================
-const SYSTEM_INSTRUCTION_QAXALE = `You are QAXALE (Qaxalee), an advanced, friendly, and culturally authentic AI assistant and educational companion designed specifically to empower Afaan Oromoo speakers and learners worldwide with artificial intelligence, programming, digital technology, computer science, and modern knowledge.
+// =========================================================================
+// 5. QAXALE V3 Master System Instruction (Interpretive Intelligence & Agency)
+// =========================================================================
+const SYSTEM_INSTRUCTION_QAXALE_V3 = `You are QAXALE V3, an intelligent interpretation, learning, reasoning, communication, and capability-building platform.
 
-Key Responsibilities & Principles:
-1. First-class Afaan Oromoo support:
-   - When the user asks in Afaan Oromoo, respond in natural, grammatically sound, modern, and respectful Afaan Oromoo (Qubee Afaan Oromoo).
-   - When the user asks in English, respond in clear English while offering relevant Afaan Oromoo technical term counterparts where helpful.
-   - Use authentic tech vocabulary (e.g., 'Saayinsii Kompiitaraa', 'Saganteessuu / Koodingii', 'Hubannoo Nam-tolchee (AI)', 'Kuusaa Daataa', 'Algorizimii', 'Fayyadamaa', 'Mooraa Marraa / Marsariitii', 'Qorannoo').
-2. Pedagogical Excellence:
-   - Break down complex concepts step-by-step.
-   - For coding questions, explain the logic, syntax, line-by-line function, and real-world execution flow.
-3. Identity & Tone:
-   - You are named "QAXALE". Always encourage learning, innovation, and digital empowerment.
-   - Format answers cleanly with markdown headings, lists, and code blocks for easy reading on mobile screens.`;
+QAXALE is not merely a chatbot, search engine, translator, or knowledge database.
+QAXALE exists to help people move from:
+ACCESS → INTERPRETATION → UNDERSTANDING → APPLICATION → CREATION → AGENCY → CONTRIBUTION
+
+Core Philosophy:
+«FROM ACCESS TO UNDERSTANDING. FROM UNDERSTANDING TO CAPABILITY. FROM CAPABILITY TO AGENCY. FROM AGENCY TO CONTRIBUTION.»
+
+QAXALE bridges the interpretive divide:
+- People may have access to devices, internet, AI, and technical documents while being unable to penetrate that knowledge due to language, terminology, abstraction, or missing context.
+- QAXALE does not merely give information; QAXALE builds the structured pathway INTO information.
+- QAXALE measures success by whether the user becomes more capable on their own over time.
+
+Language & Cultural Bridge:
+- First-class Afaan Oromoo (Qubee) and English support.
+- When communicating in Afaan Oromoo, use natural, modern, idiomatic Afaan Oromoo.
+- Preserve key global technical terminology alongside clear Afaan Oromoo explanations so users can operate in global digital ecosystems.
+- Never permanently flatten advanced knowledge; instead: SIMPLIFY → UNDERSTAND → RECONSTRUCT → HANDLE COMPLEXITY.`;
 
 async function callGemini(
   messages: GeminiMessage[],
@@ -236,7 +238,7 @@ async function callGemini(
   for (const model of CONFIGURED_MODELS) {
     for (let attempt = 0; attempt < delays.length; attempt++) {
       try {
-        console.log(`[AI] endpoint=${endpoint} model=${model} attempt=${attempt + 1}`);
+        console.log(`[AI V3] endpoint=${endpoint} model=${model} attempt=${attempt + 1}`);
 
         const config: any = {};
         if (options?.systemInstruction) config.systemInstruction = options.systemInstruction;
@@ -255,17 +257,16 @@ async function callGemini(
       } catch (error: any) {
         lastError = error;
         const status = getStatusCode(error);
-        console.warn(`[AI] endpoint=${endpoint} model=${model} attempt=${attempt + 1} status=${status || "UNKNOWN"} error=${error?.message || error}`);
+        console.warn(`[AI V3] endpoint=${endpoint} model=${model} attempt=${attempt + 1} status=${status || "UNKNOWN"} error=${error?.message || error}`);
 
         if (!isRetryable(error)) {
-          // Non-retryable (400, 401, 403, 404), break loop for this model and test next model or throw
-          console.warn(`[AI] Model ${model} returned non-retryable status ${status}. Skipping model.`);
+          console.warn(`[AI V3] Model ${model} non-retryable status ${status}. Moving to next fallback.`);
           break;
         }
 
         if (attempt < delays.length - 1) {
           const delayMs = delays[attempt];
-          console.log(`[AI] retrying=true backoff=${delayMs}ms`);
+          console.log(`[AI V3] retrying=true backoff=${delayMs}ms`);
           await sleep(delayMs);
         }
       }
@@ -275,7 +276,6 @@ async function callGemini(
   throw lastError || new Error("All configured Gemini models failed.");
 }
 
-// Input validation helper
 function requireString(value: unknown, field: string): string {
   if (typeof value !== "string" || !value.trim()) {
     throw new Error(`${field} is required.`);
@@ -283,36 +283,36 @@ function requireString(value: unknown, field: string): string {
   return value.trim();
 }
 
-// ==========================================
-// 6. Express App & Endpoint Handlers
-// ==========================================
+// =========================================================================
+// 6. Express Server Bootstrapper & API Endpoints
+// =========================================================================
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
   app.use(express.json({ limit: "5mb" }));
 
-  // Health check endpoint
+  // Health endpoint
   app.get("/api/health", (_req, res) => {
     res.json({
       status: "ok",
-      app: "QAXALE",
+      app: "QAXALE V3",
+      vision: "Interpretive Intelligence & Human Agency Platform",
       configuredModels: CONFIGURED_MODELS,
       hasApiKey: !!process.env.GEMINI_API_KEY,
       timestamp: new Date().toISOString(),
     });
   });
 
-  // ------------------------------------------
-  // 10. POST /api/chat
-  // ------------------------------------------
+  // -----------------------------------------------------------------------
+  // POST /api/chat (Enhanced with QAXALE V3 Agency Loop & Reasoning Modes)
+  // -----------------------------------------------------------------------
   app.post("/api/chat", async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { messages, message, language = "om", mode = "standard" } = req.body;
 
       let historyPayload: unknown = messages;
 
-      // Handle single message payload format as well
       if (!historyPayload && typeof message === "string" && message.trim()) {
         historyPayload = [{ role: "user", content: message }];
       }
@@ -327,7 +327,6 @@ async function startServer() {
 
       const sanitized = sanitizeHistory(historyPayload);
 
-      // If sanitation left nothing, but user provided a message string, add it
       if (sanitized.length === 0) {
         if (typeof message === "string" && message.trim()) {
           sanitized.push({ role: "user", parts: [{ text: message.trim() }] });
@@ -340,20 +339,47 @@ async function startServer() {
         }
       }
 
+      // Dynamic System Guidance tailored to QAXALE V3 Modes
       let modeInstruction = "";
-      if (mode === "step-by-step") {
-        modeInstruction = " Break down the answer into structured, numbered, easy-to-follow steps with simple analogies.";
+      if (mode === "interpret-layers") {
+        modeInstruction = `
+Perform a multi-layer interpretive breakdown of the user's topic:
+1. Core Idea (Essential mechanism)
+2. Plain Language Explanation (No unnecessary jargon)
+3. Feynman Analogy (Relate to everyday tangible reality)
+4. Technical Vocabulary & Mechanics (Key terms explained)
+5. Practical Application & Creation Step (What can the user build or do with this?)
+6. Understanding Check (A thought-provoking question to test understanding).`;
+      } else if (mode === "agency-loop") {
+        modeInstruction = `
+Guide the user through the QAXALE Agency Loop:
+- Access & Interpret the core knowledge
+- Connect to practical capability
+- Guide the user to Create an actionable plan or project blueprint
+- Encourage independent thinking and contribution.`;
+      } else if (mode === "feynman") {
+        modeInstruction = `
+Apply the Feynman Technique:
+- Explain the concept as if teaching an intelligent beginner encountering it for the first time.
+- Use clear everyday analogies, pinpoint common misconceptions, and ask the user to explain it back in their own words.`;
+      } else if (mode === "first-principles") {
+        modeInstruction = `
+Deconstruct the problem using First-Principles Reasoning:
+- Break the topic down to its most fundamental, indisputable truths.
+- Reason upward from foundational axioms to innovative, practical solutions.`;
+      } else if (mode === "step-by-step") {
+        modeInstruction = " Break down the answer into structured, numbered, easy-to-follow steps with clear explanations.";
       } else if (mode === "summary") {
-        modeInstruction = " Provide a crisp, high-value summary with key takeaways and bullet points.";
+        modeInstruction = " Provide a crisp, high-value summary with key takeaways and structured bullet points.";
       } else if (mode === "brainstorm") {
-        modeInstruction = " Generate creative, actionable, and structured ideas with pros, opportunities, and next steps.";
+        modeInstruction = " Generate creative, actionable, and structured ideas with realistic steps, pros, and local opportunities.";
       } else if (mode === "code-explain") {
-        modeInstruction = " Explain this code logic in clear Afaan Oromoo, breaking down what each block does and how it executes.";
+        modeInstruction = " Explain this programming code clearly, breaking down syntax, logic, variables, and execution steps in Afaan Oromoo.";
       }
 
       try {
         const replyText = await callGemini(sanitized, {
-          systemInstruction: SYSTEM_INSTRUCTION_QAXALE + modeInstruction,
+          systemInstruction: SYSTEM_INSTRUCTION_QAXALE_V3 + "\n" + modeInstruction,
           temperature: 0.7,
           endpoint: "/api/chat",
         });
@@ -361,17 +387,16 @@ async function startServer() {
         return res.json({
           success: true,
           message: replyText,
-          reply: replyText, // backwards compatible for frontend
+          reply: replyText,
         });
       } catch (geminiError: any) {
         console.error("Gemini failed during /api/chat:", geminiError?.message || geminiError);
 
-        // Check if API key is not configured or all models were unavailable
         const lastUserMsg = sanitized.filter((m) => m.role === "user").pop()?.parts[0]?.text || "";
         const fallbackText =
           language === "om"
-            ? `Akkam! Ani **QAXALE** dha.\n\nGaaffii kee: **"${lastUserMsg.slice(0, 80)}"** ilaalchisee:\n- QAXALE AI teeknooloojii, saganteessuu (coding), fi hiika jechootaa irratti qophiidha.\n- Yaada ykn gaaffii dabalataa yoo qabaatte na gaafadhu!`
-            : `Hello! I am **QAXALE**.\n\nRegarding your query: **"${lastUserMsg.slice(0, 80)}"**:\n- QAXALE is ready to assist you with tech learning and coding.\n- Feel free to ask more details!`;
+            ? `Akkam! Ani **QAXALE V3** dha.\n\nGaaffii kee: **"${lastUserMsg.slice(0, 80)}"** ilaalchisee:\n- QAXALE V3 hubannoo, hiika beekumsaa, fi dandeettii uumuu irratti si gargaara.\n- Yeroo gabaabaa keessatti deebii guutuu argachuuf irra deebi'ii yaali.`
+            : `Hello! I am **QAXALE V3**.\n\nRegarding your query: **"${lastUserMsg.slice(0, 80)}"**:\n- QAXALE V3 is dedicated to interpretive intelligence and human capability building.\n- Feel free to ask more details!`;
 
         return res.json({
           success: true,
@@ -385,9 +410,9 @@ async function startServer() {
     }
   });
 
-  // ------------------------------------------
-  // 11. POST /api/translate
-  // ------------------------------------------
+  // -----------------------------------------------------------------------
+  // POST /api/translate (Conceptual Language & Knowledge Bridge)
+  // -----------------------------------------------------------------------
   app.post("/api/translate", async (req: Request, res: Response, next: NextFunction) => {
     try {
       const rawText = req.body.text || req.body.input;
@@ -405,8 +430,8 @@ async function startServer() {
         });
       }
 
-      const prompt = `You are the world's most capable linguistic expert in Afaan Oromoo (Oromo language) and English.
-Translate the following text accurately, naturally, and contextually.
+      const prompt = `You are QAXALE V3's Linguistic & Conceptual Bridge Expert in Afaan Oromoo and English.
+Do NOT do mere literal word replacement. Provide a deeply contextual and intellectually accurate translation with conceptual interpretation.
 
 Source Language: ${sourceLang === "om" ? "Afaan Oromoo" : "English"}
 Target Language: ${targetLang === "om" ? "Afaan Oromoo" : "English"}
@@ -414,11 +439,12 @@ Target Language: ${targetLang === "om" ? "Afaan Oromoo" : "English"}
 Original Text:
 """${text}"""
 
-Provide a structured response in JSON format with the following fields:
-- "translatedText": The accurate, idiomatic translation in the target language.
-- "alternativeTranslations": An array of 1-3 natural alternative ways to say this (if applicable).
-- "culturalOrGrammarNotes": A short explanation of tricky words, grammar particles (e.g., -ti, -dha, -tu, -in), or tone.
-- "keyVocabulary": An array of objects with { "term": string, "meaning": string, "partOfSpeech": string } for key words in the sentence.`;
+Provide a structured response in JSON format with:
+- "translatedText": The accurate, idiomatic translation.
+- "alternativeTranslations": An array of 1-3 natural alternative expressions.
+- "culturalOrGrammarNotes": Clear explanation of grammar nuances, particles (-ti, -dha, -tu, -in), or cultural context.
+- "conceptualBridge": How the underlying concepts connect between global technical terminology and Afaan Oromoo understanding.
+- "keyVocabulary": Array of objects: { "term": string, "meaning": string, "partOfSpeech": string }.`;
 
       const messages: GeminiMessage[] = [{ role: "user", parts: [{ text: prompt }] }];
 
@@ -442,6 +468,7 @@ Provide a structured response in JSON format with the following fields:
           translatedText: parsed.translatedText || rawJson,
           alternativeTranslations: parsed.alternativeTranslations || [],
           culturalOrGrammarNotes: parsed.culturalOrGrammarNotes || "",
+          conceptualBridge: parsed.conceptualBridge || "",
           keyVocabulary: parsed.keyVocabulary || [],
         });
       } catch (geminiError) {
@@ -453,7 +480,7 @@ Provide a structured response in JSON format with the following fields:
           culturalOrGrammarNotes:
             targetLang === "om"
               ? "Jechoonni kun akkaataa yaada isaaniitiin hiikamu."
-              : "Contextual direct translation notes.",
+              : "Contextual translation note.",
           fallback: true,
         });
       }
@@ -462,9 +489,9 @@ Provide a structured response in JSON format with the following fields:
     }
   });
 
-  // ------------------------------------------
-  // 12. POST /api/code-explain
-  // ------------------------------------------
+  // -----------------------------------------------------------------------
+  // POST /api/code-explain (Pedagogical Code Deconstruction)
+  // -----------------------------------------------------------------------
   app.post("/api/code-explain", async (req: Request, res: Response, next: NextFunction) => {
     try {
       let code: string;
@@ -483,20 +510,20 @@ Provide a structured response in JSON format with the following fields:
 
       const targetLanguage = req.body.targetLanguage || "om";
 
-      const prompt = `You are QAXALE, an expert computer science professor and mentor who explains programming concepts to students in ${targetLanguage === "om" ? "Afaan Oromoo" : "English"}.
+      const prompt = `You are QAXALE V3, an expert computer science professor empowering learners in ${targetLanguage === "om" ? "Afaan Oromoo" : "English"}.
 Language of Code: ${language}
 Code:
 \`\`\`${language}
 ${code}
 \`\`\`
 
-Explain this code clearly in ${targetLanguage === "om" ? "Afaan Oromoo (with English code syntax retained)" : "English"}.
+Explain this code clearly in ${targetLanguage === "om" ? "Afaan Oromoo (with English code syntax preserved)" : "English"}.
 Provide a structured JSON output with:
-- "title": A short descriptive title of what this code does.
-- "summary": A 2-sentence summary in Afaan Oromoo.
-- "lineByLine": An array of objects: { "line": string, "explanation": string } explaining important sections.
+- "title": Descriptive title of what this code achieves.
+- "summary": Clear 2-sentence summary in Afaan Oromoo.
+- "lineByLine": Array of objects: { "line": string, "explanation": string } explaining mechanics.
 - "conceptLearned": The core programming concept (e.g. Loops / Marroo, Functions / Dalagaalee, Conditionals / Haalawwan).
-- "outputSimulation": What this code will print or produce when executed.
+- "outputSimulation": What this code will print or produce.
 - "tips": 2 actionable tips or common mistakes to avoid.`;
 
       const messages: GeminiMessage[] = [{ role: "user", parts: [{ text: prompt }] }];
@@ -548,9 +575,9 @@ Provide a structured JSON output with:
     }
   });
 
-  // ------------------------------------------
-  // 13. POST /api/dictionary
-  // ------------------------------------------
+  // -----------------------------------------------------------------------
+  // POST /api/dictionary (Technical Terminology & Conceptual Network)
+  // -----------------------------------------------------------------------
   app.post("/api/dictionary", async (req: Request, res: Response, next: NextFunction) => {
     try {
       const rawWord = req.body.word || req.body.term;
@@ -566,7 +593,7 @@ Provide a structured JSON output with:
         });
       }
 
-      const prompt = `Provide the Afaan Oromoo technological/scientific definition, English equivalent, etymology, and example sentences for the term: "${word}".
+      const prompt = `Provide the Afaan Oromoo technological & conceptual definition, English equivalent, why the term exists, example sentences, and related vocabulary for: "${word}".
 Respond in JSON format:
 {
   "term": "${word}",
@@ -575,6 +602,7 @@ Respond in JSON format:
   "partOfSpeech": string,
   "definitionOromo": string,
   "definitionEnglish": string,
+  "whyItExists": string,
   "exampleOromo": string,
   "exampleEnglish": string,
   "relatedTerms": string[]
@@ -607,10 +635,10 @@ Respond in JSON format:
           success: true,
           term: word,
           oromooTerm: word,
-          definition: "Jechi kun teeknooloojii fi saayinsii kompiitaraa keessatti bal'inaan faayidaa irra oola.",
-          definitionOromo: "Jechi kun teeknooloojii fi saayinsii kompiitaraa keessatti bal'inaan faayidaa irra oola.",
-          definitionEnglish: "A technological terminology used in computer science.",
-          relatedTerms: ["Teeknooloojii", "Koodingii", "Saayinsii"],
+          definition: "Jechi kun teeknooloojii fi saayinsii keessatti faayidaa irra oola.",
+          definitionOromo: "Jechi kun teeknooloojii fi saayinsii keessatti faayidaa irra oola.",
+          definitionEnglish: "A key technological concept in modern digital science.",
+          relatedTerms: ["Teeknooloojii", "Hubannoo", "Saayinsii"],
           fallback: true,
         });
       }
@@ -619,9 +647,9 @@ Respond in JSON format:
     }
   });
 
-  // ------------------------------------------
+  // -----------------------------------------------------------------------
   // Vite Frontend Middleware
-  // ------------------------------------------
+  // -----------------------------------------------------------------------
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -636,11 +664,11 @@ Respond in JSON format:
     });
   }
 
-  // ------------------------------------------
-  // 14. Global Error Middleware
-  // ------------------------------------------
+  // -----------------------------------------------------------------------
+  // Global Error Middleware
+  // -----------------------------------------------------------------------
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    console.error("[SERVER UNHANDLED ERROR]:", error);
+    console.error("[QAXALE V3 UNHANDLED ERROR]:", error);
 
     if (res.headersSent) {
       return;
@@ -658,10 +686,10 @@ Respond in JSON format:
   });
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[QAXALE SERVER] Listening on http://0.0.0.0:${PORT}`);
+    console.log(`[QAXALE V3 SERVER] Running on http://0.0.0.0:${PORT}`);
   });
 }
 
 startServer().catch((err) => {
-  console.error("[FATAL SERVER BOOTSTRAP ERROR]:", err);
+  console.error("[FATAL QAXALE V3 BOOTSTRAP ERROR]:", err);
 });
