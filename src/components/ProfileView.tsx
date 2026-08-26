@@ -16,6 +16,7 @@ import {
   Smartphone,
   Zap,
   Cpu,
+  Database,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { TECH_DICTIONARY } from "../data/dictionaryData";
@@ -33,6 +34,7 @@ export const ProfileView: React.FC = () => {
     setShowDataFlowModal,
     architecturePlans,
     isAppInstalled,
+    isFirestoreSynced,
   } = useApp();
 
   const bookmarkedItems = TECH_DICTIONARY.filter((t) =>
@@ -59,6 +61,20 @@ export const ProfileView: React.FC = () => {
             <p className="text-xs text-slate-400 mt-0.5">
               {language === "om" ? "Barataa Teeknolojii & AI" : "AI & Tech Explorer"}
             </p>
+          </div>
+        </div>
+
+        {/* Cloud Firestore Storage Status */}
+        <div className="mt-3.5 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Database className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-xs text-slate-300">
+              {language === "om" ? "Kuusaa Firestore" : "Firestore Cloud Storage"}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>{isFirestoreSynced ? (language === "om" ? "Qindaa'eera" : "Synced") : (language === "om" ? "Hojjetaa Jira" : "Active")}</span>
           </div>
         </div>
 

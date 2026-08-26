@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User progress and profile documents
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+    
+    // Conversations and chat messages
+    match /conversations/{conversationId} {
+      allow read, write: if true;
+    }
+    
+    // Global or collection group fallback for sub-collections if created
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

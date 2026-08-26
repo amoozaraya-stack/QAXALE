@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import confetti from "canvas-confetti";
 import {
   AppLanguage,
@@ -9,6 +9,13 @@ import {
   UserProgress,
   ArchitecturePlan,
 } from "../types";
+import {
+  syncUserProgressToFirestore,
+  loadUserProgressFromFirestore,
+  saveConversationToFirestore,
+  loadConversationsFromFirestore,
+  deleteConversationFromFirestore,
+} from "../services/firestoreSync";
 
 interface AppContextType {
   language: AppLanguage;
@@ -43,6 +50,7 @@ interface AppContextType {
   isAppInstalled: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  isFirestoreSynced: boolean;
 }
 
 const DEFAULT_PROGRESS: UserProgress = {
@@ -94,6 +102,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [searchQuery, setSearchQuery] = useState("");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [isFirestoreSynced, setIsFirestoreSynced] = useState(false);
+  const initialLoadRef = useRef(false);
 
   const [architecturePlans, setArchitecturePlans] = useState<ArchitecturePlan[]>(() => {
     const saved = localStorage.getItem("qaxale_arch_plans");
@@ -236,6 +246,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return DEFAULT_PROGRESS;
   });
 
+  // Initial Firestore Cloud Hydration
+  useEffect(() => {
+    if (initialLoadRef.current) return;
+    initialLoadRef.current = true;
+
+    async function hydrateFromFirestore() {
+      try {
+        const [cloudProgress, cloudConvs] = await Promise.all([
+          loadUserProgressFromFirestore(),
+          loadConversationsFromFirestore(),
+        ]);
+
+        if (cloudProgress) {
+          setProgress((prev) => ({
+            ...prev,
+            ...cloudProgress,
+            totalXP: Math.max(prev.totalXP, cloudProgress.totalXP || 0),
+            streakDays: Math.max(prev.streakDays, cloudProgress.streakDays || 1),
+            completedLessonIds: Array.from(
+              new Set([...prev.completedLessonIds, ...(cloudProgress.completedLessonIds || [])])
+            ),
+            completedChallengeIds: Array.from(
+              new Set([...prev.completedChallengeIds, ...(cloudProgress.completedChallengeIds || [])])
+            ),
+            bookmarkedTerms: Array.from(
+              new Set([...prev.bookmarkedTerms, ...(cloudProgress.bookmarkedTerms || [])])
+            ),
+          }));
+        }
+
+        if (cloudConvs && cloudConvs.length > 0) {
+          setConversations((localConvs) => {
+            const map = new Map<string, Conversation>();
+            // Add cloud first
+            cloudConvs.forEach((c) => map.set(c.id, c));
+            // Merge local on top if newer
+            localConvs.forEach((c) => {
+              const existing = map.get(c.id);
+              if (!existing || c.updatedAt > existing.updatedAt) {
+                map.set(c.id, c);
+              }
+            });
+            const merged = Array.from(map.values()).sort((a, b) => b.updatedAt - a.updatedAt);
+            return merged.length > 0 ? merged : localConvs;
+          });
+        }
+        setIsFirestoreSynced(true);
+      } catch (err) {
+        console.warn("Hydration from Firestore deferred:", err);
+      }
+    }
+
+    hydrateFromFirestore();
+  }, []);
+
   // Save to localStorage
   useEffect(() => {
     localStorage.setItem("qaxale_lang", language);
@@ -251,7 +316,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     localStorage.setItem("qaxale_progress", JSON.stringify(progress));
-  }, [progress]);
+    // Background sync to Firestore
+    syncUserProgressToFirestore(progress, language).catch(() => {});
+  }, [progress, language]);
 
   const setLanguage = (lang: AppLanguage) => {
     setLanguageState(lang);
@@ -285,6 +352,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setConversations((prev) => [newConv, ...prev]);
     setActiveConversationId(newId);
+    saveConversationToFirestore(newConv).catch(() => {});
     return newId;
   };
 
@@ -309,25 +377,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           messages: [msg],
         };
         setActiveConversationId(newId);
+        saveConversationToFirestore(newConv).catch(() => {});
         return [newConv, ...prev];
       }
 
-      return prev.map((conv) => {
+      const updated = prev.map((conv) => {
         if (conv.id === targetId) {
           const updatedMessages = [...conv.messages, msg];
           let updatedTitle = conv.title;
           if (conv.messages.length === 0 && messageData.role === "user") {
             updatedTitle = messageData.content.slice(0, 35) || conv.title;
           }
-          return {
+          const updatedConv: Conversation = {
             ...conv,
             title: updatedTitle,
             messages: updatedMessages,
             updatedAt: Date.now(),
           };
+          saveConversationToFirestore(updatedConv).catch(() => {});
+          return updatedConv;
         }
         return conv;
       });
+
+      return updated;
     });
   };
 
@@ -339,6 +412,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return filtered;
     });
+    deleteConversationFromFirestore(id).catch(() => {});
   };
 
   const addTranslationToHistory = (item: Omit<TranslationHistoryItem, "id" | "timestamp">) => {
@@ -424,6 +498,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isAppInstalled,
         searchQuery,
         setSearchQuery,
+        isFirestoreSynced,
       }}
     >
       {children}

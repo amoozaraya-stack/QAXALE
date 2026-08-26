@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profiles & Progress",
+      "description": "Stores user learning progress, streak, stats, and preferences",
+      "properties": {
+        "userId": { "type": "string", "description": "Unique user identifier or device identifier" },
+        "language": { "type": "string", "description": "Preferred language (om | en)" },
+        "streakDays": { "type": "number", "description": "Current learning streak days" },
+        "totalTermsMastered": { "type": "number", "description": "Count of mastered tech terms" },
+        "totalChallengesCompleted": { "type": "number", "description": "Count of completed challenges" },
+        "totalTranslations": { "type": "number", "description": "Count of translations made" },
+        "totalCodeExplains": { "type": "number", "description": "Count of code snippets explained" },
+        "masteredTerms": { "type": "array", "description": "List of mastered vocabulary term IDs" },
+        "bookmarkedTerms": { "type": "array", "description": "List of bookmarked vocabulary term IDs" },
+        "completedChallengeIds": { "type": "array", "description": "List of completed challenge IDs" },
+        "level": { "type": "number", "description": "User learning level" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+      },
+      "required": ["userId", "language"]
+    },
+    "conversations": {
+      "title": "Chat Conversations",
+      "description": "User AI conversation sessions",
+      "properties": {
+        "id": { "type": "string", "description": "Conversation ID" },
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "title": { "type": "string", "description": "Conversation summary title" },
+        "language": { "type": "string", "description": "Conversation language" },
+        "mode": { "type": "string", "description": "Chat mode (standard, feynman, agency-loop, code-builder, socratic)" },
+        "messages": {
+          "type": "array",
+          "description": "Turn-by-turn chat history messages",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "role": { "type": "string" },
+              "content": { "type": "string" },
+              "timestamp": { "type": "number" },
+              "fallback": { "type": "boolean" }
+            }
+          }
+        },
+        "createdAt": { "type": "number", "description": "Creation timestamp" },
+        "updatedAt": { "type": "number", "description": "Last message timestamp" }
+      },
+      "required": ["id", "userId", "messages"]
+    }
+  }
+}

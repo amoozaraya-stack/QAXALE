@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, Flame, BookOpen, Globe2, BookA, Download, Zap } from "lucide-react";
+import { Sparkles, Flame, BookOpen, Globe2, BookA, Download, Zap, User } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 export const Header: React.FC = () => {
@@ -10,6 +10,7 @@ export const Header: React.FC = () => {
     setShowDictionaryModal,
     setShowInstallModal,
     setShowDataFlowModal,
+    setActiveTab,
     isAppInstalled,
   } = useApp();
 
@@ -38,28 +39,29 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Actions: DataFlow, Dictionary, Install, Streak, Lang Switcher */}
+        {/* Right Actions: Install App, Profile, Streak, Lang Switcher */}
         <div className="flex items-center gap-1.5">
-          {/* Data Flow Machine Trigger */}
-          <button
-            id="header-dataflow-btn"
-            onClick={() => setShowDataFlowModal(true)}
-            className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-all active:scale-95"
-            title={language === "om" ? "Motora Ya'iinsa Ragaa (Data-Flow Machine)" : "Data-Flow Machine & Telemetry"}
-          >
-            <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-            <span className="hidden sm:inline">{language === "om" ? "Ragaa" : "Data Flow"}</span>
-          </button>
+          {/* Install App Button */}
+          {!isAppInstalled && (
+            <button
+              id="header-install-btn"
+              onClick={() => setShowInstallModal(true)}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-all active:scale-95"
+              title={language === "om" ? "App kana fe'adhu" : "Install QAXALE App"}
+            >
+              <Download className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-[11px]">{language === "om" ? "Fe'i" : "Install"}</span>
+            </button>
+          )}
 
-          {/* Tech Dictionary Modal Trigger */}
+          {/* Profile / Settings Button */}
           <button
-            id="header-dictionary-btn"
-            onClick={() => setShowDictionaryModal(true)}
+            id="header-profile-btn"
+            onClick={() => setActiveTab("profile")}
             className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-amber-400 hover:border-slate-700 text-xs font-medium transition-all active:scale-95"
-            title={language === "om" ? "Kuusaa Jechootaa" : "Tech Dictionary"}
+            title={language === "om" ? "Piroofayilii & Qindaa'ina" : "Profile & Settings"}
           >
-            <BookA className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">{language === "om" ? "Jechoota" : "Dict"}</span>
+            <User className="w-3.5 h-3.5 text-amber-400" />
           </button>
 
           {/* Streak Badge */}
