@@ -16,7 +16,7 @@ jobs:
           distribution: 'zulu'
           java-version: 17
       - name: Build APK with Gradle
-        run: |
+        run: qaxale 
           cd android
           ./gradlew assembleDebug
       - name: Upload APK
