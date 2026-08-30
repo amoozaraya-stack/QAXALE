@@ -1,6 +1,6 @@
 export type AppLanguage = "om" | "en";
 
-export type NavTab = "home" | "chat" | "interpret" | "learn" | "translate" | "code" | "profile";
+export type NavTab = "home" | "chat" | "interpret" | "learn" | "translate" | "code" | "tools" | "profile";
 
 export type ChatMode =
   | "standard"
@@ -28,12 +28,21 @@ export interface RepresentationLayer {
   content?: string;
 }
 
+export interface ChatAttachment {
+  name: string;
+  type: string; // "image" | "text" | "pdf" | "code" | "file"
+  size: number;
+  dataUrl?: string; // base64 preview or content
+  textSnippet?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: number;
   mode?: ChatMode;
+  attachments?: ChatAttachment[];
   layers?: Record<string, string>;
   agencyStage?: "access" | "interpret" | "understand" | "apply" | "create" | "agency" | "contribute";
 }

@@ -16,7 +16,7 @@ import {
 import { useApp } from "../context/AppContext";
 import { CODING_CURRICULUM, CODING_CHALLENGES, CodeLessonUnit } from "../data/codingCurriculum";
 import { CodeChallenge } from "../types";
-import { explainCode, CodeExplainApiResponse } from "../services/api";
+import { explainCode, executeCode, CodeExplainApiResponse } from "../services/api";
 
 export const CodeView: React.FC = () => {
   const { language, progress, completeChallenge } = useApp();
@@ -27,16 +27,20 @@ export const CodeView: React.FC = () => {
 
   const [codeContent, setCodeContent] = useState<string>(CODING_CURRICULUM[0].starterCode);
   const [outputConsole, setOutputConsole] = useState<string>("");
+  const [executionError, setExecutionError] = useState<string>("");
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isExplaining, setIsExplaining] = useState<boolean>(false);
   const [aiExplanation, setAiExplanation] = useState<CodeExplainApiResponse | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
+
+  const currentLang = selectedChallenge ? selectedChallenge.language : selectedUnit.language;
 
   const handleSelectUnit = (unit: CodeLessonUnit) => {
     setSelectedUnit(unit);
     setSelectedChallenge(null);
     setCodeContent(unit.starterCode);
     setOutputConsole("");
+    setExecutionError("");
     setAiExplanation(null);
   };
 
@@ -44,26 +48,34 @@ export const CodeView: React.FC = () => {
     setSelectedChallenge(challenge);
     setCodeContent(challenge.starterCode);
     setOutputConsole("");
+    setExecutionError("");
     setAiExplanation(null);
   };
 
-  const handleRunCode = () => {
+  const handleRunCode = async () => {
     setIsRunning(true);
     setOutputConsole("");
+    setExecutionError("");
 
-    setTimeout(() => {
-      if (selectedChallenge) {
-        // Challenge execution simulation
-        setOutputConsole(selectedChallenge.expectedOutput);
-        completeChallenge(selectedChallenge.id, 80);
-      } else if (selectedUnit.language === "html") {
+    try {
+      if (currentLang === "html") {
         setOutputConsole("[HTML Preview Rendered Below]");
       } else {
-        // Evaluate or print expected lesson output
-        setOutputConsole(selectedUnit.expectedOutput);
+        const result = await executeCode(codeContent, currentLang);
+        if (result.stderr) {
+          setExecutionError(result.stderr);
+        }
+        setOutputConsole(result.stdout || (result.stderr ? "" : "Program exited cleanly."));
+
+        if (selectedChallenge && (result.stdout.trim().includes(selectedChallenge.expectedOutput.trim()) || result.exitCode === 0)) {
+          completeChallenge(selectedChallenge.id, 80);
+        }
       }
+    } catch (err: any) {
+      setExecutionError(err?.message || "Execution encountered an error.");
+    } finally {
       setIsRunning(false);
-    }, 400);
+    }
   };
 
   const handleExplainWithAi = async () => {
@@ -292,11 +304,15 @@ export const CodeView: React.FC = () => {
             <Terminal className="w-3.5 h-3.5 text-amber-400" />
             <span>{language === "om" ? "Bu'aa Hojiirra Oolmaa (Terminal Output)" : "Execution Output"}</span>
           </span>
-          {outputConsole && (
-            <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
+          {executionError ? (
+            <span className="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/30">
+              Exit Code: 1 (Error)
+            </span>
+          ) : outputConsole ? (
+            <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
               Exit Code: 0 (Success)
             </span>
-          )}
+          ) : null}
         </div>
 
         {selectedUnit.language === "html" && outputConsole ? (
@@ -304,15 +320,23 @@ export const CodeView: React.FC = () => {
             <div dangerouslySetInnerHTML={{ __html: codeContent }} />
           </div>
         ) : (
-          <pre className="bg-slate-950 p-3 rounded-xl font-mono text-xs text-slate-200 overflow-x-auto min-h-[50px] border border-slate-800/80 whitespace-pre-wrap">
-            {outputConsole || (
-              <span className="text-slate-500 italic">
-                {language === "om"
-                  ? "Koodii hojiirra oolchuuf 'Hojiirra Oolchi' cuqaasaa..."
-                  : "Click 'Run Code' to execute and inspect stdout..."}
-              </span>
+          <div className="space-y-2">
+            {executionError && (
+              <div className="bg-rose-950/40 border border-rose-800/60 p-3 rounded-xl font-mono text-xs text-rose-300 whitespace-pre-wrap">
+                <span className="font-bold text-rose-400 block mb-1">Standard Error (stderr):</span>
+                {executionError}
+              </div>
             )}
-          </pre>
+            <pre className="bg-slate-950 p-3 rounded-xl font-mono text-xs text-emerald-300 overflow-x-auto min-h-[50px] border border-slate-800/80 whitespace-pre-wrap">
+              {outputConsole || (
+                <span className="text-slate-500 italic">
+                  {language === "om"
+                    ? "Koodii hojiirra oolchuuf 'Hojiirra Oolchi' cuqaasaa..."
+                    : "Click 'Run Code' to execute and inspect real stdout..."}
+                </span>
+              )}
+            </pre>
+          </div>
         )}
       </div>
 

@@ -8,6 +8,7 @@ import { ChatView } from "./components/ChatView";
 import { LearnView } from "./components/LearnView";
 import { TranslateView } from "./components/TranslateView";
 import { CodeView } from "./components/CodeView";
+import { ToolsView } from "./components/ToolsView";
 import { ProfileView } from "./components/ProfileView";
 import { TechDictionaryModal } from "./components/TechDictionaryModal";
 import { InstallModal } from "./components/InstallModal";
@@ -30,6 +31,8 @@ const AppContent: React.FC = () => {
         return <TranslateView />;
       case "code":
         return <CodeView />;
+      case "tools":
+        return <ToolsView />;
       case "profile":
         return <ProfileView />;
       default:

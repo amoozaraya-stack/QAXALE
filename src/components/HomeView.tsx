@@ -14,6 +14,8 @@ import {
   Cpu,
   Compass,
   Lightbulb,
+  Wrench,
+  Calculator,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { TECH_DICTIONARY } from "../data/dictionaryData";
@@ -182,6 +184,37 @@ export const HomeView: React.FC = () => {
             </div>
           </div>
           <ArrowRight className="w-4 h-4 text-indigo-400 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+        </div>
+      </div>
+
+      {/* Generative AI Tools & Workbench Showcase */}
+      <div
+        id="home-tools-banner"
+        onClick={() => setActiveTab("tools")}
+        className="cursor-pointer group relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-amber-950/30 to-slate-900 border border-amber-500/40 p-3.5 hover:border-amber-400 transition-all shadow-md active:scale-98"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+              <Wrench className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="font-bold text-xs sm:text-sm text-slate-100 font-mono">
+                  {language === "om" ? "Meeshaalee AI & Connectors Qaxale" : "Google Tools, AI & Connectors Suite"}
+                </h4>
+                <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">
+                  8 Pro Tools
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {language === "om"
+                  ? "Google Grounding, Deep Research, Docs Exporter, Webhooks & Diagnostics"
+                  : "Google Grounding, Deep Research, Google Docs Exporter, Webhooks & Telemetry"}
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-all" />
         </div>
       </div>
 

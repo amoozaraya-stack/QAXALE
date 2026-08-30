@@ -248,6 +248,68 @@ export async function translateText(
   }
 }
 
+export interface CodeRunResult {
+  success: boolean;
+  stdout: string;
+  stderr?: string;
+  exitCode: number;
+  executionTimeMs?: number;
+  language: string;
+}
+
+export async function executeCode(
+  code: string,
+  language: string
+): Promise<CodeRunResult> {
+  const startTime = Date.now();
+  const payload = { code, language };
+
+  try {
+    const response = await fetch("/api/code-run", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const durationMs = Date.now() - startTime;
+    const data = await response.json();
+
+    recordTelemetry({
+      id: `coderun-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: Date.now(),
+      endpoint: "/api/code-run",
+      method: "POST",
+      status: response.status,
+      durationMs,
+      requestPayload: payload,
+      responsePayload: data,
+      step: 5,
+      stageName: "Code Execution Runtime",
+      success: data.success ?? true,
+    });
+
+    return {
+      success: data.success ?? true,
+      stdout: data.stdout ?? "",
+      stderr: data.stderr,
+      exitCode: data.exitCode ?? 0,
+      executionTimeMs: data.executionTimeMs || durationMs,
+      language: data.language || language,
+    };
+  } catch (err: any) {
+    console.error("Code run error:", err);
+    return {
+      success: false,
+      stdout: "",
+      stderr: err.message || "Failed to execute code",
+      exitCode: 1,
+      language,
+    };
+  }
+}
+
 export async function explainCode(
   code: string,
   language: string,
@@ -411,6 +473,442 @@ export async function lookupDictionaryTerm(term: string): Promise<DictionaryApiR
   } catch (err: any) {
     console.error("Dictionary lookup error:", err?.message || err);
     return null;
+  }
+}
+
+// -------------------------------------------------------------------------
+// Generative AI Tool Suite Client Helpers
+// -------------------------------------------------------------------------
+
+export interface DeepResearchResult {
+  success: boolean;
+  title: string;
+  executiveSummary: string;
+  firstPrinciples: Array<{ concept: string; explanation: string }>;
+  verifiedFacts: string[];
+  criticalCounterarguments: string[];
+  actionPlan: Array<{ phase: number; title: string; action: string; deliverable: string }>;
+  keySources: string[];
+}
+
+export async function performDeepResearch(
+  topic: string,
+  language: AppLanguage,
+  depth: "standard" | "comprehensive" = "comprehensive"
+): Promise<DeepResearchResult> {
+  const startTime = Date.now();
+  const payload = { topic, language, depth };
+
+  try {
+    const response = await fetch("/api/deep-research", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    recordTelemetry({
+      id: `research-${Date.now()}`,
+      timestamp: Date.now(),
+      endpoint: "/api/deep-research",
+      method: "POST",
+      status: response.status,
+      durationMs: Date.now() - startTime,
+      requestPayload: payload,
+      responsePayload: data,
+      step: 6,
+      stageName: "Deep Research Execution",
+      success: data.success ?? true,
+    });
+
+    return data;
+  } catch (err: any) {
+    console.error("Deep research client error:", err);
+    return {
+      success: false,
+      title: `Research: ${topic}`,
+      executiveSummary: "Unable to complete deep research at this time.",
+      firstPrinciples: [],
+      verifiedFacts: [],
+      criticalCounterarguments: [],
+      actionPlan: [],
+      keySources: [],
+    };
+  }
+}
+
+export interface DiagramResult {
+  success: boolean;
+  title: string;
+  description: string;
+  mermaidSyntax?: string;
+  svgSnippet?: string;
+  nodes?: Array<{ id: string; label: string; type: string; detail: string }>;
+  connections?: Array<{ from: string; to: string; label: string }>;
+}
+
+export async function generateDiagram(
+  prompt: string,
+  type: string,
+  language: AppLanguage
+): Promise<DiagramResult> {
+  const startTime = Date.now();
+  const payload = { prompt, type, language };
+
+  try {
+    const response = await fetch("/api/diagram-generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    recordTelemetry({
+      id: `diagram-${Date.now()}`,
+      timestamp: Date.now(),
+      endpoint: "/api/diagram-generate",
+      method: "POST",
+      status: response.status,
+      durationMs: Date.now() - startTime,
+      requestPayload: payload,
+      responsePayload: data,
+      step: 6,
+      stageName: "Visual Diagram Generation",
+      success: data.success ?? true,
+    });
+
+    return data;
+  } catch (err: any) {
+    console.error("Diagram client error:", err);
+    return {
+      success: false,
+      title: prompt,
+      description: "Failed to generate diagram.",
+    };
+  }
+}
+
+export interface DocumentAnalysisResult {
+  success: boolean;
+  title: string;
+  summary: string;
+  wordCount: number;
+  readingTimeMin: number;
+  keyTakeaways: string[];
+  actionItems: string[];
+  risksOrCaveats: string[];
+  glossary?: Array<{ term: string; definition: string }>;
+}
+
+export async function analyzeDocument(
+  text: string,
+  fileName: string,
+  language: AppLanguage
+): Promise<DocumentAnalysisResult> {
+  const startTime = Date.now();
+  const payload = { text, fileName, language };
+
+  try {
+    const response = await fetch("/api/document-analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    recordTelemetry({
+      id: `doc-${Date.now()}`,
+      timestamp: Date.now(),
+      endpoint: "/api/document-analyze",
+      method: "POST",
+      status: response.status,
+      durationMs: Date.now() - startTime,
+      requestPayload: payload,
+      responsePayload: data,
+      step: 6,
+      stageName: "Document Intelligence Extraction",
+      success: data.success ?? true,
+    });
+
+    return data;
+  } catch (err: any) {
+    console.error("Document analysis client error:", err);
+    return {
+      success: false,
+      title: fileName,
+      summary: "Failed to analyze document.",
+      wordCount: 0,
+      readingTimeMin: 0,
+      keyTakeaways: [],
+      actionItems: [],
+      risksOrCaveats: [],
+    };
+  }
+}
+
+export interface MathProbabilityResult {
+  success: boolean;
+  problemTitle: string;
+  finalAnswer: string;
+  stepByStepProof: Array<{ step: number; explanation: string; formula: string }>;
+  impliedProbabilityPercent?: number;
+  expectedValue?: string;
+  responsibleAdvice?: string;
+}
+
+export async function solveMathProbability(
+  problem: string,
+  language: AppLanguage
+): Promise<MathProbabilityResult> {
+  const startTime = Date.now();
+  const payload = { problem, language };
+
+  try {
+    const response = await fetch("/api/math-probability", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    recordTelemetry({
+      id: `math-${Date.now()}`,
+      timestamp: Date.now(),
+      endpoint: "/api/math-probability",
+      method: "POST",
+      status: response.status,
+      durationMs: Date.now() - startTime,
+      requestPayload: payload,
+      responsePayload: data,
+      step: 6,
+      stageName: "Mathematical & Probability Solver",
+      success: data.success ?? true,
+    });
+
+    return data;
+  } catch (err: any) {
+    console.error("Math solver client error:", err);
+    return {
+      success: false,
+      problemTitle: problem,
+      finalAnswer: "Error solving mathematical equation.",
+      stepByStepProof: [],
+    };
+  }
+}
+
+// Browser Web Speech & Audio Synthesizer
+export function speakText(text: string, language: AppLanguage): boolean {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    return false;
+  }
+
+  window.speechSynthesis.cancel();
+
+  // Strip Markdown characters for clean speech
+  const cleanText = text.replace(/[*#`_~[\]()<>]/g, " ").trim();
+  if (!cleanText) return false;
+
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = language === "om" ? "om-ET" : "en-US";
+  utterance.rate = 0.95;
+  utterance.pitch = 1.0;
+
+  window.speechSynthesis.speak(utterance);
+  return true;
+}
+
+// -------------------------------------------------------------------------
+// Google Grounding & Extended Connectors Suite
+// -------------------------------------------------------------------------
+
+export interface GoogleGroundingResult {
+  success: boolean;
+  query: string;
+  text: string;
+  searchQueries: string[];
+  sources: Array<{ title: string; url: string }>;
+  provider?: string;
+  timestamp?: number;
+  fallback?: boolean;
+}
+
+export async function performGoogleSearchGrounding(
+  query: string,
+  language: AppLanguage
+): Promise<GoogleGroundingResult> {
+  const startTime = Date.now();
+  const payload = { query, language };
+
+  try {
+    const response = await fetch("/api/google-search-grounding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    recordTelemetry({
+      id: `grounding-${Date.now()}`,
+      timestamp: Date.now(),
+      endpoint: "/api/google-search-grounding",
+      method: "POST",
+      status: response.status,
+      durationMs: Date.now() - startTime,
+      requestPayload: payload,
+      responsePayload: data,
+      step: 6,
+      stageName: "Google Real-Time Search Grounding",
+      success: data.success ?? true,
+    });
+
+    return data;
+  } catch (err: any) {
+    console.error("Google grounding client error:", err);
+    return {
+      success: false,
+      query,
+      text: "Unable to retrieve real-time Google grounded data at this moment.",
+      searchQueries: [query],
+      sources: [],
+    };
+  }
+}
+
+export interface WebhookConnectorResult {
+  success: boolean;
+  status?: number;
+  statusText?: string;
+  durationMs: number;
+  headers?: Record<string, string>;
+  data?: any;
+  error?: string;
+  url: string;
+  method: string;
+}
+
+export async function dispatchWebhookConnector(
+  url: string,
+  method: string = "GET",
+  headers: Record<string, string> = {},
+  body?: any
+): Promise<WebhookConnectorResult> {
+  const startTime = Date.now();
+  const payload = { url, method, headers, body };
+
+  try {
+    const response = await fetch("/api/connectors/webhook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    recordTelemetry({
+      id: `webhook-${Date.now()}`,
+      timestamp: Date.now(),
+      endpoint: "/api/connectors/webhook",
+      method: "POST",
+      status: response.status,
+      durationMs: Date.now() - startTime,
+      requestPayload: payload,
+      responsePayload: data,
+      step: 6,
+      stageName: "External Webhook / API Dispatch",
+      success: data.success ?? true,
+    });
+
+    return data;
+  } catch (err: any) {
+    console.error("Webhook connector error:", err);
+    return {
+      success: false,
+      durationMs: Date.now() - startTime,
+      error: err?.message || "Failed to dispatch request",
+      url,
+      method,
+    };
+  }
+}
+
+export interface ExportConnectorResult {
+  success: boolean;
+  fileName: string;
+  mimeType: string;
+  format: string;
+  content: string;
+  byteSize: number;
+}
+
+export async function exportDocumentData(
+  title: string,
+  content: string,
+  format: "markdown" | "gdoc" | "json" | "html" = "markdown",
+  metadata: Record<string, any> = {}
+): Promise<ExportConnectorResult | null> {
+  try {
+    const response = await fetch("/api/connectors/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content, format, metadata }),
+    });
+    return await response.json();
+  } catch (err) {
+    console.error("Export connector error:", err);
+    return null;
+  }
+}
+
+export interface SystemHealthData {
+  success: boolean;
+  status: string;
+  uptimeSec: number;
+  timestamp: number;
+  version: string;
+  environment: string;
+  models: Array<{ model: string; available: boolean; cooldownUntil: number | null }>;
+  cache: { totalEntries: number; maxEntries: number; ttlMs: number };
+  memory: { rssMb: number; heapUsedMb: number; heapTotalMb: number };
+  firestoreConfigured: boolean;
+  firestoreDb: string;
+  activeEndpoints: string[];
+}
+
+export async function fetchSystemHealth(): Promise<SystemHealthData | null> {
+  try {
+    const response = await fetch("/api/connectors/system-health");
+    return await response.json();
+  } catch (err) {
+    console.error("Health check error:", err);
+    return null;
+  }
+}
+
+// Client Cloud Sync / Snapshot Manager
+export interface CloudSyncSnapshot {
+  timestamp: number;
+  device: string;
+  conversationsCount: number;
+  savedNotesCount: number;
+  dbRef: string;
+}
+
+export function saveCloudSyncSnapshot(snapshot: CloudSyncSnapshot) {
+  try {
+    const history = getCloudSyncHistory();
+    history.unshift(snapshot);
+    localStorage.setItem("qaxale_cloud_sync_history", JSON.stringify(history.slice(0, 20)));
+  } catch (e) {
+    console.error("Error storing sync snapshot:", e);
+  }
+}
+
+export function getCloudSyncHistory(): CloudSyncSnapshot[] {
+  try {
+    const data = localStorage.getItem("qaxale_cloud_sync_history");
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
   }
 }
 
