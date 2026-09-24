@@ -156,6 +156,38 @@ export const HomeView: React.FC = () => {
         </div>
       </div>
 
+      {/* QAXALE Autonomous AI Agent Banner */}
+      <div
+        id="home-autonomous-banner"
+        onClick={() => setActiveTab("autonomous")}
+        className="cursor-pointer group relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/60 via-slate-900 to-amber-950/30 border border-amber-500/50 p-4 hover:border-amber-400 transition-all shadow-xl active:scale-98"
+      >
+        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-inner">
+              <Cpu className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="font-extrabold text-sm text-amber-300 font-mono tracking-tight">
+                  {language === "om" ? "QAXALE AUTONOMOUS AI" : "QAXALE AUTONOMOUS AI"}
+                </h4>
+                <span className="text-[10px] font-black bg-amber-500 text-slate-950 px-2 py-0.5 rounded uppercase tracking-wider">
+                  V3 AGENT
+                </span>
+              </div>
+              <p className="text-[11.5px] text-slate-300 mt-0.5 leading-snug">
+                {language === "om"
+                  ? "Adeemsa of-danda'aa 6: Hubannoo, Ragaa Qabatamaa, Monte Carlo 10k, fi Xiinxala Saayinsii Murtoo"
+                  : "Self-directed 6-step loop: Perception, Empirical Grounding, 10k Monte Carlo, and Epistemic Synthesis"}
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="w-5 h-5 text-amber-400 group-hover:translate-x-1 transition-all" />
+        </div>
+      </div>
+
       {/* Data-Flow Machine Architecture Banner */}
       <div
         id="home-dataflow-banner"

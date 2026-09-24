@@ -1,6 +1,6 @@
 {
   "name": "QAXALE V3",
-  "description": "Interpretive Intelligence, Knowledge Penetration & Human Agency Platform in Afaan Oromoo and English.",
+  "description": "Simplifying and applying the pure accumulated knowledge of the world for major local learners through interpretive intelligence, STEM deconstruction, and autonomous tools in Afaan Oromoo and English.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

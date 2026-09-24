@@ -1,51 +1,337 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="50%" stop-color="#020617"/>
-      <stop offset="100%" stop-color="#1e1b4b"/>
+    <!-- Background Cosmic Gradients -->
+    <radialGradient id="spaceGlow" cx="50%" cy="46%" r="58%">
+      <stop offset="0%" stop-color="#172554" stop-opacity="0.9"/>
+      <stop offset="35%" stop-color="#0f172a" stop-opacity="0.98"/>
+      <stop offset="70%" stop-color="#050814" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#02040a" stop-opacity="1"/>
+    </radialGradient>
+
+    <!-- Metallic Gold 3D Gradients -->
+    <linearGradient id="goldPrimary" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="18%" stop-color="#fde047"/>
+      <stop offset="42%" stop-color="#eab308"/>
+      <stop offset="70%" stop-color="#ca8a04"/>
+      <stop offset="90%" stop-color="#a16207"/>
+      <stop offset="100%" stop-color="#713f12"/>
     </linearGradient>
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fef08a"/>
-      <stop offset="30%" stop-color="#f59e0b"/>
-      <stop offset="100%" stop-color="#d97706"/>
+
+    <linearGradient id="goldHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#fef08a" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#d97706" stop-opacity="0.1"/>
     </linearGradient>
-    <linearGradient id="accentGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#10b981"/>
-      <stop offset="100%" stop-color="#38bdf8"/>
+
+    <linearGradient id="goldShine" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#78350f"/>
+      <stop offset="30%" stop-color="#d97706"/>
+      <stop offset="50%" stop-color="#fef08a"/>
+      <stop offset="70%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#fffbeb"/>
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="12" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+
+    <!-- Celestial Orbital Energy Gradients -->
+    <linearGradient id="orbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#60a5fa" stop-opacity="0.85"/>
+      <stop offset="65%" stop-color="#fde047" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <linearGradient id="orbitBackGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#2563eb" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.5"/>
+    </linearGradient>
+
+    <!-- Star Radiant Gradients -->
+    <radialGradient id="starGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="25%" stop-color="#38bdf8" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#60a5fa" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="starCoreGold" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="30%" stop-color="#fef08a"/>
+      <stop offset="70%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </radialGradient>
+
+    <!-- Glow & Shadow Filters -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <filter id="orbitGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="goldDropShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.75"/>
     </filter>
   </defs>
 
-  <!-- Background rounded squircle -->
-  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-opacity="0.3"/>
+  <!-- Full-bleed Standard Cosmic Canvas (No Clunky Border Frame) -->
+  <rect width="512" height="512" fill="url(#spaceGlow)"/>
 
-  <!-- AI Circuit Nodes in background -->
-  <circle cx="140" cy="140" r="10" fill="#f59e0b" opacity="0.6"/>
-  <circle cx="372" cy="140" r="10" fill="#10b981" opacity="0.6"/>
-  <circle cx="140" cy="372" r="10" fill="#38bdf8" opacity="0.6"/>
-  <circle cx="372" cy="372" r="10" fill="#f59e0b" opacity="0.6"/>
+  <!-- Celestial Nebula Sparkle Cluster -->
+  <!-- Ambient Micro Stars -->
+  <g opacity="0.85">
+    <circle cx="85" cy="95" r="1.5" fill="#ffffff" opacity="0.6"/>
+    <circle cx="110" cy="210" r="1.2" fill="#38bdf8" opacity="0.7"/>
+    <circle cx="70" cy="340" r="1.8" fill="#fde047" opacity="0.8"/>
+    <circle cx="160" cy="70" r="1.4" fill="#ffffff" opacity="0.5"/>
+    <circle cx="420" cy="85" r="1.5" fill="#fde047" opacity="0.7"/>
+    <circle cx="445" cy="240" r="1.2" fill="#ffffff" opacity="0.6"/>
+    <circle cx="410" cy="380" r="1.6" fill="#38bdf8" opacity="0.8"/>
+    <circle cx="360" cy="440" r="1.3" fill="#ffffff" opacity="0.5"/>
+    <circle cx="130" cy="430" r="1.5" fill="#fde047" opacity="0.6"/>
+    <circle cx="210" cy="465" r="1.2" fill="#38bdf8" opacity="0.5"/>
+  </g>
 
-  <path d="M 140 140 L 210 210 M 372 140 L 302 210 M 140 372 L 210 302 M 372 372 L 302 302" stroke="#475569" stroke-width="4" stroke-dasharray="6,6" opacity="0.5"/>
+  <!-- Cross-Flare Stars in Deep Space -->
+  <!-- Top Left Brilliant Blue Star -->
+  <g transform="translate(95, 88)">
+    <circle cx="0" cy="0" r="8" fill="#38bdf8" opacity="0.3" filter="url(#softGlow)"/>
+    <circle cx="0" cy="0" r="3" fill="#ffffff"/>
+    <line x1="-16" y1="0" x2="16" y2="0" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="0" y1="-16" x2="0" y2="16" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
 
-  <!-- Central Emblem "Q" with tech sparks -->
-  <!-- Outer circle of Q -->
-  <circle cx="256" cy="236" r="115" fill="none" stroke="url(#goldGrad)" stroke-width="28" stroke-linecap="round" filter="url(#glow)"/>
-  
-  <!-- Inner ring accent -->
-  <circle cx="256" cy="236" r="82" fill="#020617" stroke="url(#accentGrad)" stroke-width="6" opacity="0.8"/>
+  <!-- Top Right Gold Star -->
+  <g transform="translate(395, 78)">
+    <circle cx="0" cy="0" r="7" fill="#fde047" opacity="0.35" filter="url(#softGlow)"/>
+    <circle cx="0" cy="0" r="2.5" fill="#ffffff"/>
+    <line x1="-12" y1="0" x2="12" y2="0" stroke="#fde047" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="0" y1="-12" x2="0" y2="12" stroke="#fde047" stroke-width="1.2" stroke-linecap="round"/>
+  </g>
 
-  <!-- Q Kick tail -->
-  <path d="M 295 275 L 375 355" stroke="url(#goldGrad)" stroke-width="32" stroke-linecap="round" filter="url(#glow)"/>
-  <path d="M 295 275 L 375 355" stroke="#fef08a" stroke-width="16" stroke-linecap="round"/>
+  <!-- Mid Right Flare Star -->
+  <g transform="translate(436, 190)">
+    <circle cx="0" cy="0" r="9" fill="#f59e0b" opacity="0.3" filter="url(#softGlow)"/>
+    <circle cx="0" cy="0" r="3" fill="#ffffff"/>
+    <line x1="-15" y1="0" x2="15" y2="0" stroke="#fef08a" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="0" y1="-15" x2="0" y2="15" stroke="#fef08a" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
 
-  <!-- Core AI Sparkle in Center -->
-  <polygon points="256,186 266,226 306,236 266,246 256,286 246,246 206,236 246,226" fill="url(#goldGrad)"/>
+  <!-- Lower Left Star -->
+  <g transform="translate(125, 275)">
+    <circle cx="0" cy="0" r="5" fill="#38bdf8" opacity="0.25"/>
+    <circle cx="0" cy="0" r="1.8" fill="#ffffff"/>
+    <line x1="-8" y1="0" x2="8" y2="0" stroke="#38bdf8" stroke-width="1"/>
+    <line x1="0" y1="-8" x2="0" y2="8" stroke="#38bdf8" stroke-width="1"/>
+  </g>
 
-  <!-- Small text banner at bottom -->
-  <text x="256" y="445" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="900" fill="#f8fafc" text-anchor="middle" letter-spacing="8">QAXALE</text>
+  <!-- ======================================================== -->
+  <!-- 1. BACK SECTION OF COSMIC ORBITAL RING (Passes Behind Q) -->
+  <!-- ======================================================== -->
+  <g filter="url(#orbitGlow)">
+    <!-- Back orbit curve spanning from left to upper right -->
+    <path d="M 68 310 C 50 210, 180 100, 390 115 C 450 120, 470 150, 465 185" 
+          fill="none" 
+          stroke="url(#orbitBackGrad)" 
+          stroke-width="5" 
+          stroke-linecap="round"
+          stroke-dasharray="800"
+          stroke-dashoffset="0"
+          opacity="0.75"/>
+    
+    <!-- Secondary ethereal stardust trail -->
+    <path d="M 78 300 C 65 215, 185 110, 385 122" 
+          fill="none" 
+          stroke="#38bdf8" 
+          stroke-width="2" 
+          opacity="0.6"/>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- 2. MAIN 3D METALLIC GOLDEN "Q" EMBLEM                    -->
+  <!-- ======================================================== -->
+  <g filter="url(#goldDropShadow)">
+    
+    <!-- Outer Q Ring Body -->
+    <!-- Base Outer Torus Ring -->
+    <path d="M 256 50
+             C 342 50, 412 120, 412 206
+             C 412 292, 342 362, 256 362
+             C 170 362, 100 292, 100 206
+             C 100 120, 170 50, 256 50 Z
+             M 256 102
+             C 198 102, 152 148, 152 206
+             C 152 264, 198 310, 256 310
+             C 314 310, 360 264, 360 206
+             C 360 148, 314 102, 256 102 Z"
+          fill="url(#goldPrimary)"/>
+
+    <!-- Inner Bevel & Radial Shading Layer -->
+    <path d="M 256 54
+             C 339 54, 407 122, 407 206
+             C 407 252, 386 293, 353 321
+             L 332 300
+             C 358 277, 375 243, 375 206
+             C 375 140, 322 87, 256 87
+             C 190 87, 137 140, 137 206
+             C 137 245, 156 280, 184 303
+             L 163 324
+             C 127 296, 105 254, 105 206
+             C 105 122, 173 54, 256 54 Z"
+          fill="url(#goldShine)"
+          opacity="0.85"/>
+
+    <!-- Inner Edge Rim Highlight -->
+    <circle cx="256" cy="206" r="105" fill="none" stroke="#fef08a" stroke-width="2.5" opacity="0.7"/>
+    <circle cx="256" cy="206" r="154" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.85"/>
+    <circle cx="256" cy="206" r="157" fill="none" stroke="#78350f" stroke-width="1.5" opacity="0.6"/>
+
+    <!-- Specular Arc Highlights on Top of Q -->
+    <path d="M 180 92 C 220 68, 292 68, 332 92" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+    <path d="M 195 86 C 228 72, 284 72, 317 86" fill="none" stroke="#fef08a" stroke-width="2" stroke-linecap="round" opacity="0.95"/>
+
+    <!-- Dynamic Curved Golden Q Kick Tail -->
+    <!-- Lower Tail Sweep with 3D Bevel -->
+    <path d="M 216 248
+             C 255 248, 290 270, 328 308
+             C 362 342, 406 370, 452 382
+             C 410 380, 370 358, 336 332
+             C 300 304, 270 286, 222 284
+             Z"
+          fill="url(#goldPrimary)"/>
+
+    <path d="M 226 254
+             C 260 255, 294 274, 332 312
+             C 368 348, 412 374, 452 382
+             C 416 372, 380 348, 346 322
+             C 310 292, 280 275, 236 270
+             Z"
+          fill="url(#goldShine)"/>
+
+    <!-- Crisp Highlight along the Q Tail Curve -->
+    <path d="M 235 258 C 280 266, 324 300, 372 344 C 404 368, 430 377, 450 381"
+          fill="none" 
+          stroke="#fffbeb" 
+          stroke-width="3" 
+          stroke-linecap="round"
+          opacity="0.9"/>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- 3. FRONT SECTION OF COSMIC ORBITAL RING (Passes Over Q)  -->
+  <!-- ======================================================== -->
+  <g filter="url(#orbitGlow)">
+    <!-- Electric Blue / Cyan Glow Orbit swooshing in front -->
+    <path d="M 465 185
+             C 455 240, 395 320, 270 355
+             C 160 385, 75 365, 68 310
+             C 64 285, 80 250, 115 220"
+          fill="none"
+          stroke="url(#orbitGrad)"
+          stroke-width="6"
+          stroke-linecap="round"/>
+
+    <!-- High-Intensity Inner Energy Beam -->
+    <path d="M 460 190
+             C 448 245, 390 318, 275 352
+             C 170 380, 85 360, 72 312"
+          fill="none"
+          stroke="#ffffff"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          opacity="0.9"/>
+
+    <!-- Floating Stardust Particles on the Orbit -->
+    <circle cx="438" cy="225" r="3" fill="#ffffff" filter="url(#softGlow)"/>
+    <circle cx="360" cy="305" r="2.2" fill="#fde047"/>
+    <circle cx="280" cy="348" r="2.5" fill="#38bdf8"/>
+    <circle cx="160" cy="358" r="2" fill="#ffffff"/>
+    <circle cx="95" cy="325" r="2.8" fill="#60a5fa" filter="url(#softGlow)"/>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- 4. RADIANT 4-POINT CELESTIAL DIAMOND STAR CORE (In Q)    -->
+  <!-- ======================================================== -->
+  <g transform="translate(256, 192)">
+    <!-- Deep Aura Radial Glow -->
+    <circle cx="0" cy="0" r="54" fill="url(#starGlow)" opacity="0.95"/>
+    <circle cx="0" cy="0" r="28" fill="url(#starGlow)" opacity="0.85"/>
+
+    <!-- Horizontal & Vertical Starlight Beams -->
+    <path d="M -52 0 L 52 0" stroke="#67e8f9" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+    <path d="M 0 -52 L 0 52" stroke="#67e8f9" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+    <path d="M -30 0 L 30 0" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 0 -30 L 0 30" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Diagonal Soft Rays -->
+    <path d="M -18 -18 L 18 18 M -18 18 L 18 -18" stroke="#fde047" stroke-width="1.2" opacity="0.7"/>
+
+    <!-- Radiant 4-Point Star Polygon (Layer 1 - Cyan/Gold Base) -->
+    <polygon points="0,-42 9,-10 42,0 9,10 0,42 -9,10 -42,0 -9,-10"
+             fill="url(#starCoreGold)"
+             filter="url(#softGlow)"/>
+
+    <!-- Radiant 4-Point Star Polygon (Layer 2 - Brilliant Diamond Core) -->
+    <polygon points="0,-36 7,-8 36,0 7,8 0,36 -7,8 -36,0 -7,-8"
+             fill="#ffffff"/>
+
+    <!-- Facet Inner Shading on Diamond -->
+    <polygon points="0,-36 0,0 36,0" fill="#fef08a" opacity="0.6"/>
+    <polygon points="0,36 0,0 -36,0" fill="#67e8f9" opacity="0.5"/>
+    <circle cx="0" cy="0" r="4.5" fill="#ffffff"/>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- 5. LUXURY BEVELED BRAND TYPOGRAPHY "QAXALE"              -->
+  <!-- ======================================================== -->
+  <g transform="translate(256, 440)" filter="url(#goldDropShadow)">
+    <!-- Golden Geometric Display Title -->
+    <text x="0" y="0" 
+          font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" 
+          font-size="44" 
+          font-weight="900" 
+          letter-spacing="10" 
+          text-anchor="middle" 
+          fill="url(#goldPrimary)">
+      QAXALE
+    </text>
+
+    <!-- Specular Highlight Overlay on Typography -->
+    <text x="0" y="-1" 
+          font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" 
+          font-size="44" 
+          font-weight="900" 
+          letter-spacing="10" 
+          text-anchor="middle" 
+          fill="none"
+          stroke="#fffbeb"
+          stroke-width="1"
+          opacity="0.65">
+      QAXALE
+    </text>
+
+    <!-- Sleek Minimalist Lateral Accent Wings -->
+    <line x1="-155" y1="-12" x2="-115" y2="-12" stroke="url(#goldPrimary)" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="-160" cy="-12" r="2.5" fill="#fde047"/>
+    <line x1="115" y1="-12" x2="155" y2="-12" stroke="url(#goldPrimary)" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="160" cy="-12" r="2.5" fill="#fde047"/>
+
+    <!-- Bilingual Subline / Agency Tag -->
+    <text x="0" y="24" 
+          font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          font-weight="600" 
+          letter-spacing="4" 
+          text-anchor="middle" 
+          fill="#94a3b8" 
+          opacity="0.85">
+      INTELLIGENCE • V3
+    </text>
+  </g>
 </svg>

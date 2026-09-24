@@ -45,10 +45,13 @@ export const InstallModal: React.FC = () => {
         {/* Modal Top Header */}
         <div className="p-4 bg-gradient-to-r from-slate-900 via-slate-800/80 to-slate-900 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-0.5 shadow-sm">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center text-amber-400">
-                <Download className="w-4 h-4" />
-              </div>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-[1.5px] shadow-sm overflow-hidden">
+              <img
+                src="/icon.svg"
+                alt="QAXALE"
+                className="w-full h-full object-cover rounded-[9px]"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div>
               <h3 className="font-bold text-sm text-white">

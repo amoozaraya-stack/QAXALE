@@ -46,6 +46,25 @@
         "updatedAt": { "type": "number", "description": "Last message timestamp" }
       },
       "required": ["id", "userId", "messages"]
+    },
+    "autonomous_tasks": {
+      "title": "Autonomous Agent Tasks & Missions",
+      "description": "Stores autonomous missions, cognitive step logs, tool telemetry, and executive dossiers",
+      "properties": {
+        "id": { "type": "string", "description": "Mission task identifier" },
+        "userId": { "type": "string", "description": "Owner user identifier" },
+        "title": { "type": "string", "description": "Mission title" },
+        "goal": { "type": "string", "description": "High-level autonomous objective" },
+        "domain": { "type": "string", "description": "Domain category" },
+        "autonomyMode": { "type": "string", "description": "Autonomy level: full or human-in-the-loop" },
+        "status": { "type": "string", "description": "Execution status" },
+        "confidenceScore": { "type": "number", "description": "Calculated confidence percentage" },
+        "steps": { "type": "array", "description": "Telemetry logs of tool execution steps" },
+        "synthesis": { "type": "object", "description": "Synthesized executive dossier and recommendations" },
+        "createdAt": { "type": "number", "description": "Creation epoch" },
+        "updatedAt": { "type": "number", "description": "Last update epoch" }
+      },
+      "required": ["id", "userId", "goal", "status"]
     }
   }
 }

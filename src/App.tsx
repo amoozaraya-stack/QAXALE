@@ -10,6 +10,7 @@ import { TranslateView } from "./components/TranslateView";
 import { CodeView } from "./components/CodeView";
 import { ToolsView } from "./components/ToolsView";
 import { ProfileView } from "./components/ProfileView";
+import { AutonomousView } from "./components/AutonomousView";
 import { TechDictionaryModal } from "./components/TechDictionaryModal";
 import { InstallModal } from "./components/InstallModal";
 import { DataFlowInspectorModal } from "./components/DataFlowInspectorModal";
@@ -21,6 +22,8 @@ const AppContent: React.FC = () => {
     switch (activeTab) {
       case "home":
         return <HomeView />;
+      case "autonomous":
+        return <AutonomousView />;
       case "interpret":
         return <InterpretView />;
       case "chat":

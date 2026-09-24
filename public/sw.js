@@ -1,4 +1,4 @@
-const CACHE_NAME = 'qaxale-cache-v2';
+const CACHE_NAME = 'qaxale-cache-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -36,13 +36,36 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass-through for API and websocket requests
-  if (event.request.url.includes('/api/')) {
+  const url = event.request.url;
+
+  // Pass-through for non-GET, API, Vite dev server, and module imports
+  if (
+    event.request.method !== 'GET' ||
+    url.includes('/api/') ||
+    url.includes('/@vite/') ||
+    url.includes('/@fs/') ||
+    url.includes('/@id/') ||
+    url.includes('/src/') ||
+    url.includes('node_modules') ||
+    url.includes('?v=')
+  ) {
     return;
   }
+
+  // Only navigation requests (page loads) may fall back to index.html
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/index.html') || caches.match('/');
+      })
+    );
+    return;
+  }
+
+  // Static assets (images, fonts, css) - try cache, then network; never return HTML fallback
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).catch(() => caches.match('/'));
+      return cached || fetch(event.request);
     })
   );
 });

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   User,
   Award,
@@ -17,9 +17,11 @@ import {
   Zap,
   Cpu,
   Database,
+  Brain,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { TECH_DICTIONARY } from "../data/dictionaryData";
+import { MemoryInspectorModal } from "./MemoryInspectorModal";
 
 export const ProfileView: React.FC = () => {
   const {
@@ -35,7 +37,10 @@ export const ProfileView: React.FC = () => {
     architecturePlans,
     isAppInstalled,
     isFirestoreSynced,
+    userMemory,
   } = useApp();
+
+  const [showMemoryModal, setShowMemoryModal] = useState(false);
 
   const bookmarkedItems = TECH_DICTIONARY.filter((t) =>
     progress.bookmarkedTerms.includes(t.id)
@@ -108,6 +113,49 @@ export const ProfileView: React.FC = () => {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Cognitive Memory & Personalization Profile */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <Brain className="w-4 h-4 text-amber-400" />
+            <span>{language === "om" ? "Kuusaa Yaadaa & Profile AI" : "AI Cognitive Memory & Preferences"}</span>
+          </h3>
+          <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-mono capitalize">
+            {userMemory.knowledgeLevel}
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-300">
+          {language === "om"
+            ? "QAXALE sadarkaa beekumsaa kee, daangaa eegumsa qabeenyaa (Half-Kelly), fi ragaalee si irratti qabate fayyadamee deebii siif kenne madaala."
+            : "QAXALE uses your knowledge level, Half-Kelly risk bounds, and remembered traits to hyper-personalize explanations."}
+        </p>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <span className="text-[10px] text-slate-500 uppercase block font-medium">Risk Policy</span>
+            <span className="font-mono font-bold text-emerald-400 text-xs capitalize">{userMemory.riskTolerance}</span>
+            <span className="text-[10px] text-slate-400 block font-mono">Cap: {userMemory.bankrollLimitPct}%</span>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <span className="text-[10px] text-slate-500 uppercase block font-medium">Remembered Facts</span>
+            <span className="font-mono font-bold text-amber-400 text-xs">{userMemory.rememberedFacts.length} Facts</span>
+            <span className="text-[10px] text-slate-400 block">Synced to Cloud</span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowMemoryModal(true)}
+          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-indigo-600/20 hover:from-amber-500/30 hover:to-indigo-600/30 border border-amber-500/40 text-amber-200 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+        >
+          <Brain className="w-4 h-4 text-amber-400" />
+          <span>
+            {language === "om" ? "Kuusaa Yaadaa Qoradhu (Inspect Memory)" : "Open Memory & Profile Inspector"}
+          </span>
+        </button>
       </div>
 
       {/* Data-Flow & System Architecture Card */}
@@ -299,6 +347,12 @@ export const ProfileView: React.FC = () => {
           <span>© 2026 QAXALE</span>
         </div>
       </div>
+
+      {/* Memory Inspector Modal */}
+      <MemoryInspectorModal
+        isOpen={showMemoryModal}
+        onClose={() => setShowMemoryModal(false)}
+      />
     </div>
   );
 };

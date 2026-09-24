@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, Flame, BookOpen, Globe2, BookA, Download, Zap, User } from "lucide-react";
+import { Sparkles, Flame, BookOpen, Globe2, BookA, Download, Zap, User, Cpu } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 export const Header: React.FC = () => {
@@ -19,9 +19,14 @@ export const Header: React.FC = () => {
       <div className="max-w-md mx-auto flex items-center justify-between">
         {/* Brand Logo & Name */}
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-600 to-yellow-400 p-[1.5px] shadow-sm shadow-amber-500/20">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <span className="font-black text-lg tracking-wider text-amber-400">Q</span>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-600 to-yellow-400 p-[1.5px] shadow-sm shadow-amber-500/20 overflow-hidden">
+            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center overflow-hidden">
+              <img
+                src="/icon.svg"
+                alt="QAXALE"
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
             </div>
           </div>
           <div>
@@ -39,14 +44,25 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Actions: Install App, Profile, Streak, Lang Switcher */}
+        {/* Right Actions: Install App, Autonomous, Profile, Streak, Lang Switcher */}
         <div className="flex items-center gap-1.5">
+          {/* Autonomous AI Quick Launch */}
+          <button
+            id="header-autonomous-btn"
+            onClick={() => setActiveTab("autonomous")}
+            className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-all active:scale-95"
+            title={language === "om" ? "Otoonoomasii AI (V3)" : "Autonomous AI (V3)"}
+          >
+            <Cpu className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+            <span className="text-[10px] font-mono font-bold">AUTO</span>
+          </button>
+
           {/* Install App Button */}
           {!isAppInstalled && (
             <button
               id="header-install-btn"
               onClick={() => setShowInstallModal(true)}
-              className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-all active:scale-95"
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-300 text-xs font-semibold transition-all active:scale-95"
               title={language === "om" ? "App kana fe'adhu" : "Install QAXALE App"}
             >
               <Download className="w-3.5 h-3.5 text-amber-400" />

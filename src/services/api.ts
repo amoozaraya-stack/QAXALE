@@ -1,4 +1,4 @@
-import { AppLanguage, ChatMode, HttpTelemetryEvent } from "../types";
+import { AppLanguage, ChatMode, ResponseBrevity, HttpTelemetryEvent, UserMemoryProfile } from "../types";
 export type { HttpTelemetryEvent };
 
 export interface TranslateApiResponse {
@@ -69,10 +69,22 @@ function recordTelemetry(event: HttpTelemetryEvent) {
 export async function sendChatMessage(
   messages: Array<{ role: "user" | "assistant"; content: string }>,
   language: AppLanguage = "om",
-  mode: ChatMode = "standard"
-): Promise<{ reply: string; fallback?: boolean }> {
+  mode: ChatMode = "standard",
+  brevity: ResponseBrevity = "concise",
+  autonomous: boolean = true,
+  userMemory?: UserMemoryProfile,
+  conversationSummary?: string
+): Promise<{ reply: string; fallback?: boolean; toolsInvoked?: string[] }> {
   const startTime = Date.now();
-  const payload = { messages, language, mode };
+  const payload = {
+    messages,
+    language,
+    mode,
+    brevity,
+    autonomous,
+    userMemory,
+    conversationSummary,
+  };
 
   try {
     const response = await fetch("/api/chat", {
@@ -148,17 +160,113 @@ export async function sendChatMessage(
     return {
       reply: reply || (language === "om" ? "Deebiin argame." : "Response received."),
       fallback: data?.fallback,
+      toolsInvoked: data?.toolsInvoked || [],
     };
   } catch (err: any) {
-    console.error("Chat API call failed:", err?.message || err);
+    console.error("Chat API call failed, generating resilient client fallback:", err?.message || err);
+
+    // Resilient offline fallback so users always get clear explanations & continuous clarification
+    const lastUserMessage = [...messages].reverse().find((m) => m.role === "user")?.content || "";
+    const allHistoryText = messages.map((m) => m.content).join(" ").toLowerCase();
+    const isOm = language === "om";
+
+    let fallbackReply = "";
+    if (allHistoryText.includes("probability") || allHistoryText.includes("carraa") || allHistoryText.includes("odds") || allHistoryText.includes("kelly")) {
+      fallbackReply = isOm
+        ? `### 🔍 QAXALE: Ibsa Bu'uuraa & Herrega Carraa (Resilient Offline Mode)
+**1. Maal Inni:** Herregni carraa (probability) carraa bu'aa tapha tokkoo herregaan agarsiisa: \`Carraa Ta'uu (%) = (1 / Odds) × 100\`. Fakkeenyaaf, odds 2.00 jechuun carraan isaa 50% dha.
+**2. Maal Miti:** Odds yoomiyyuu mirkaneessa (guarantee) miti. Odds 1.20 illee carraa kufuu 16.7% qaba.
+**3. Qajeelfama:** Qabeenya kee keessaa 1-2.5% caalaa matumaa hin saaxilin (Half-Kelly). Kasaaraa deebisuuf maallaqa hin dabalin.`
+        : `### 🔍 QAXALE: Core Probability Clarification (Resilient Offline Mode)
+**1. What It Is:** Implied probability is mathematically calculated via \`P (%) = (1 / Decimal Odds) * 100\` (e.g. 2.00 odds = 50% implied probability).
+**2. What It Is NOT:** Odds are not guarantees. Even at 1.20 odds, an empirical 16.7% failure risk exists.
+**3. Non-Negotiable Rule:** Cap single stakes strictly to 1–2.5% (Half-Kelly). Never chase drawdowns.`;
+    } else if (allHistoryText.includes("arsenal") || allHistoryText.includes("madrid") || allHistoryText.includes("football") || allHistoryText.includes("kubbaa") || allHistoryText.includes("match")) {
+      fallbackReply = isOm
+        ? `### ⚽ QAXALE: Xiinxala Taphaa (Resilient Offline Mode)
+- **Ragaa Mirkanaa'e:** Qabxii darbe, qophii garee fi miidhaa taphattootaa qoradhu.
+- **Tilmaama:** Taphni kubbaa miilaa jijjiirama hedduu qaba; tilmaamni hundi carraa qofa agarsiisa malee hin mirkaneessu.
+- **Ibsa Dabalataaf:** 'Ibsa Taasisi' tuquun dhimma addaa qorachuu dandeessa.`
+        : `### ⚽ QAXALE: Match Analysis Framework (Resilient Offline Mode)
+- **Empirical Baseline:** Assess past form, team lineups, and head-to-head records.
+- **Variance:** Matches carry inherent unpredictability; models provide probabilities, never certainty.
+- **Continuous Clarification:** Select 'Clarify & Demystify' to explore specific matchup dynamics.`;
+    } else {
+      fallbackReply = isOm
+        ? `### 💡 QAXALE: Ibsa & Qorannoo
+Gaaffii keessan "${lastUserMessage.slice(0, 60)}" ilaalchisee:
+- **Yaada Bu'uuraa:** Qabxiilee ijoo fi ragaa qabatamaa adda baasuun barbaachisaadha.
+- **Ibsa Dabalataa:** 'Ibsa Taasisi' tuquun caasaa fi fakkeenya dabalataa argachuu dandeessu.`
+        : `### 💡 QAXALE: Conceptual Clarification
+Regarding "${lastUserMessage.slice(0, 60)}":
+- **First Principles:** Isolate verified evidence, clarify common misconceptions, and evaluate bounded criteria.
+- **Continuous Clarification:** Click 'Clarify & Demystify' or 'Detailed Description' to continue deconstructing without interruption.`;
+    }
+
     return {
-      reply:
-        language === "om"
-          ? "Nagaa! Rakkoo neetwoorkii ykn sababa biraatiin deebiin yeroof hin milkoofne. Maaloo intarneetii keessan mirkaneessaa irra deebi'aa yaalaa."
-          : "Hello! Due to a temporary network or server issue, the response could not be loaded. Please check your connection and try again.",
+      reply: fallbackReply,
       fallback: true,
+      toolsInvoked: ["resilient_offline_mode"],
     };
   }
+}
+
+/**
+ * Summarizes conversation turns into an executive Memory Brief
+ */
+export async function summarizeConversation(
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+  language: AppLanguage = "om"
+): Promise<{ summary: string; keyTakeaways: string[]; fallback?: boolean }> {
+  const startTime = Date.now();
+  const payload = { messages, language };
+
+  try {
+    const response = await fetch("/api/chat/summarize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const durationMs = Date.now() - startTime;
+    const data = await response.json();
+
+    recordTelemetry({
+      id: `summarize-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: Date.now(),
+      endpoint: "/api/chat/summarize",
+      method: "POST",
+      status: response.status,
+      durationMs,
+      requestPayload: payload,
+      responsePayload: data,
+      step: 7,
+      stageName: "Conversation Summarized",
+      success: response.ok,
+    });
+
+    if (response.ok && data.success) {
+      return {
+        summary: data.summary,
+        keyTakeaways: Array.isArray(data.keyTakeaways) ? data.keyTakeaways : [],
+        fallback: data.fallback,
+      };
+    }
+  } catch (err) {
+    console.warn("Summarize conversation client call error:", err);
+  }
+
+  const isOm = language === "om";
+  return {
+    summary: isOm
+      ? "Waliin-haasaa kana keessatti gaaffilee fi deebiiwwan bu'uuraa gabaabinatti cuunfamaniiru."
+      : "Summary of discussion points and core takeaways from the conversation.",
+    keyTakeaways: [
+      isOm ? "Yaada ijoo qorannoo" : "Core topic explored",
+      isOm ? "Shallaggii fi daangaa balaa" : "Analytical calculation & risk boundaries",
+    ],
+    fallback: true,
+  };
 }
 
 export async function translateText(

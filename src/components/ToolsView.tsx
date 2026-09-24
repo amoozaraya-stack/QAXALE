@@ -23,6 +23,8 @@ import {
   Link2,
   Activity,
   Cloud,
+  TrendingUp,
+  ShieldAlert,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import {
@@ -39,9 +41,17 @@ import {
 import { GoogleGroundingTool } from "./tools/GoogleGroundingTool";
 import { ConnectorsTool } from "./tools/ConnectorsTool";
 import { SystemDiagnosticsTool } from "./tools/SystemDiagnosticsTool";
+import { MonteCarloSimulatorTool } from "./tools/MonteCarloSimulatorTool";
+import { ResponsibleGuardrailTool } from "./tools/ResponsibleGuardrailTool";
+import { AutonomousAgentTool } from "./tools/AutonomousAgentTool";
+import { OddsProbabilityTool } from "./tools/OddsProbabilityTool";
 
 type ActiveTool =
+  | "autonomous"
+  | "odds"
   | "grounding"
+  | "montecarlo"
+  | "guardrail"
   | "research"
   | "diagram"
   | "document"
@@ -52,7 +62,7 @@ type ActiveTool =
 
 export const ToolsView: React.FC = () => {
   const { language, setActiveTab, createConversation, addMessageToActiveConversation } = useApp();
-  const [activeTool, setActiveTool] = useState<ActiveTool>("grounding");
+  const [activeTool, setActiveTool] = useState<ActiveTool>("autonomous");
 
   // Research State
   const [researchTopic, setResearchTopic] = useState("");
@@ -153,11 +163,41 @@ export const ToolsView: React.FC = () => {
 
   const toolsList = [
     {
+      id: "autonomous" as ActiveTool,
+      label: { om: "Otoonoomasii AI (V3)", en: "Autonomous Agent (V3)" },
+      desc: { om: "Adeemsa of-danda'aa, Monte Carlo & qorannoo bu'uuraa", en: "Full self-directed multi-step reasoning & execution" },
+      icon: Cpu,
+      color: "text-amber-400 border-amber-500/30 bg-amber-500/10",
+      badge: "FLAGSHIP",
+    },
+    {
       id: "grounding" as ActiveTool,
       label: { om: "Google Grounding", en: "Google Grounding" },
       desc: { om: "Ragaa qabatamaa Google Search", en: "Real-time web verified intelligence" },
       icon: Globe,
       color: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10",
+    },
+    {
+      id: "odds" as ActiveTool,
+      label: { om: "Shallaggii Carraa & Odds", en: "Odds & Probability Model" },
+      desc: { om: "EV, Half-Kelly, Jijjiirraa & Gabaa", en: "EV, Half-Kelly & Markets Guide" },
+      icon: Calculator,
+      color: "text-amber-400 border-amber-500/30 bg-amber-500/10",
+      badge: "NEW",
+    },
+    {
+      id: "montecarlo" as ActiveTool,
+      label: { om: "Simuleeshinii Monte Carlo", en: "Monte Carlo Risk Engine" },
+      desc: { om: "Shallaggii herregaa 10,000 & Seera Kelly", en: "10,000 deterministic trials & risk modeling" },
+      icon: TrendingUp,
+      color: "text-violet-400 border-violet-500/30 bg-violet-500/10",
+    },
+    {
+      id: "guardrail" as ActiveTool,
+      label: { om: "Saayinsii Balaa & Murtoo", en: "Decision Bias & Risk Guardrail" },
+      desc: { om: "Balaa kasaaraa duukaa bu'uu fi of-eeggannoo", en: "Cognitive bias, sunk-cost trap & limits" },
+      icon: ShieldAlert,
+      color: "text-rose-400 border-rose-500/30 bg-rose-500/10",
     },
     {
       id: "connectors" as ActiveTool,
@@ -269,8 +309,20 @@ export const ToolsView: React.FC = () => {
 
       {/* ACTIVE TOOL WORKBENCH */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-md space-y-4">
+        {/* AUTONOMOUS AGENT PLATFORM (V3) */}
+        {activeTool === "autonomous" && <AutonomousAgentTool />}
+
         {/* GOOGLE SEARCH GROUNDING */}
         {activeTool === "grounding" && <GoogleGroundingTool />}
+
+        {/* ODDS & PROBABILITY INTELLIGENCE MODEL */}
+        {activeTool === "odds" && <OddsProbabilityTool />}
+
+        {/* MONTE CARLO & DETERMINISTIC VARIANCE ENGINE */}
+        {activeTool === "montecarlo" && <MonteCarloSimulatorTool />}
+
+        {/* RESPONSIBLE BRAKE-PEDAL & LOSS-CHASING GUARDRAIL */}
+        {activeTool === "guardrail" && <ResponsibleGuardrailTool />}
 
         {/* CONNECTORS & EXPORTER */}
         {activeTool === "connectors" && <ConnectorsTool />}
@@ -869,6 +921,72 @@ export const ToolsView: React.FC = () => {
                     : (language === "om" ? "Sagaleen Dhageeffadhu" : "Synthesize & Speak Aloud")}
                 </span>
               </button>
+            </div>
+
+            {/* Phonetic Vocabulary Audio Cards */}
+            <div className="pt-2 border-t border-slate-800/80 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-white font-bold flex items-center gap-1.5">
+                  <Volume2 className="w-3.5 h-3.5 text-rose-400" />
+                  {language === "om" ? "Qo'annoo Sagalee Jechoota Qaxale (Audio Terminology)" : "Phonetic Domain Terminology"}
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">Bilingual Afaan Oromoo</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[
+                  {
+                    term: "Carraa Ta'uu",
+                    phonetic: "[char-raa ta-oo]",
+                    descEn: "Probability / Likelihood",
+                    descOm: "Dandeettii ykn carraa wanti tokko ta'uu",
+                    speakText: "Carraa ta'uu jechuun lakkoofsa wanti tokko ta'uu danda'u mul'isudha.",
+                  },
+                  {
+                    term: "Qooddaa Kelly",
+                    phonetic: "[kood-daa kel-lee]",
+                    descEn: "Kelly Optimal Allocation",
+                    descOm: "Herrega saayinsawaa qabeenya eeguu",
+                    speakText: "Qooddaa Kelly jechuun shallaggii carraa irratti hundaa'ee qabeenya eeguudha.",
+                  },
+                  {
+                    term: "Kasaaraa Walitti-Aanaa",
+                    phonetic: "[ka-saa-raa wa-lit-ti aa-naa]",
+                    descEn: "Statistical Drawdown / Variance",
+                    descOm: "Balaa kasaaraa yeroo murtaa'aa keessatti mudatu",
+                    speakText: "Kasaaraa walitti aanaa jechuun jijjiirama kasaaraa yeroo gabaabaa keessatti mul'atudha.",
+                  },
+                  {
+                    term: "Itti-Gaafatamummaa",
+                    phonetic: "[it-ti gaa-fa-ta-mum-maa]",
+                    descEn: "Disciplined Decision Making",
+                    descOm: "Murtoo saayinsawaa fi daangaa qabeenyaa",
+                    speakText: "Murtoon hundi ragaa saayinsawaa fi daangaa qabeenyaa eeguu qaba.",
+                  },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2.5 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-xl flex items-center justify-between gap-2 text-xs"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-white flex items-center gap-1.5 truncate">
+                        <span>{item.term}</span>
+                        <span className="text-[10px] text-rose-300 font-mono">{item.phonetic}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                        {language === "om" ? item.descOm : item.descEn}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleSpeak(item.speakText)}
+                      className="p-2 bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 rounded-lg shrink-0 transition-colors"
+                      title="Pronounce aloud"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

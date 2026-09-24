@@ -21,6 +21,8 @@ import { sendChatMessage } from "../services/api";
 interface InterpretResult {
   concept: string;
   originalDefinition: string;
+  clarification: string;
+  descriptiveAnatomy: string;
   plainLanguage: string;
   feynmanAnalogy: string;
   coreMechanism: string;
@@ -37,6 +39,8 @@ export const InterpretView: React.FC = () => {
   const [inputConcept, setInputConcept] = useState("");
   const [selectedLayer, setSelectedLayer] = useState<
     | "all"
+    | "clarification"
+    | "description"
     | "plain"
     | "feynman"
     | "mechanism"
@@ -83,6 +87,8 @@ Deconstruct this concept: "${target}".
 Provide a structured JSON output with:
 - "concept": "${target}",
 - "originalDefinition": "Accurate formal/scientific definition",
+- "clarification": "Crucial clarification: what this concept is vs. what it is NOT, and common misconceptions people fall into",
+- "descriptiveAnatomy": "Vivid in-depth description: the constituent parts/variables and a concrete scenario walkthrough",
 - "plainLanguage": "Intuitive explanation in clear language without jargon",
 - "feynmanAnalogy": "A tangible, relatable analogy connecting it to everyday reality",
 - "coreMechanism": "The fundamental engine/rule of how it operates step-by-step",
@@ -113,6 +119,14 @@ Language: Respond in ${language === "om" ? "authentic, modern Afaan Oromoo (with
         parsed = {
           concept: target,
           originalDefinition: response.reply,
+          clarification:
+            language === "om"
+              ? "Wanta inni ta'ee fi wanta inni hin taane (what it is vs what it is not) adda baasuun barbaachisaa dha."
+              : "Key clarification: distinguishing what this concept is from what it is often confused with.",
+          descriptiveAnatomy:
+            language === "om"
+              ? "Caasaan isaa kutaalee fi qoodiinsa qabatamaa irratti ijaarama."
+              : "Constituent structural breakdown and scenario walkthrough.",
           plainLanguage: response.reply,
           feynmanAnalogy: "Yaada hubannoo uumuuf fakkeenya guyyaa guyyaa fayyadami.",
           coreMechanism: "Adeemsa bu'uuraa fi seera isaatiin hojjeta.",
@@ -246,6 +260,8 @@ Language: Respond in ${language === "om" ? "authentic, modern Afaan Oromoo (with
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-[11px]">
             {[
               { id: "all", label: language === "om" ? "Hunda (All)" : "Full Breakdown" },
+              { id: "clarification", label: language === "om" ? "🔍 Ifa Taasisi" : "🔍 Clarify" },
+              { id: "description", label: language === "om" ? "📖 Caasaa Ibsi" : "📖 Description" },
               { id: "plain", label: language === "om" ? "Afaan Salphaa" : "Plain Language" },
               { id: "feynman", label: language === "om" ? "Fakkeenya Feynman" : "Feynman Analogy" },
               { id: "mechanism", label: language === "om" ? "Seera Bu'uuraa" : "Mechanism" },
@@ -257,7 +273,7 @@ Language: Respond in ${language === "om" ? "authentic, modern Afaan Oromoo (with
                 onClick={() => setSelectedLayer(tab.id as any)}
                 className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all ${
                   selectedLayer === tab.id
-                    ? "bg-indigo-600 text-white font-bold"
+                    ? "bg-indigo-600 text-white font-bold shadow-sm"
                     : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
                 }`}
               >
@@ -265,6 +281,36 @@ Language: Respond in ${language === "om" ? "authentic, modern Afaan Oromoo (with
               </button>
             ))}
           </div>
+
+          {/* Layer: Clarification & Disambiguation */}
+          {(selectedLayer === "all" || selectedLayer === "clarification") && result.clarification && (
+            <div className="rounded-xl bg-gradient-to-r from-indigo-950/40 via-slate-900 to-slate-900 border border-indigo-500/40 p-3.5 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-400">
+                <HelpCircle className="w-4 h-4" />
+                <span>
+                  {language === "om"
+                    ? "🔍 Ifa Taasisi: Dogoggora & Daangaa Dhugaa (Clarification)"
+                    : "🔍 Clarification & Disambiguation"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-200 leading-relaxed">{result.clarification}</p>
+            </div>
+          )}
+
+          {/* Layer: Descriptive Anatomy & Walkthrough */}
+          {(selectedLayer === "all" || selectedLayer === "description") && result.descriptiveAnatomy && (
+            <div className="rounded-xl bg-gradient-to-r from-amber-950/20 via-slate-900 to-slate-900 border border-amber-500/30 p-3.5 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                <Workflow className="w-4 h-4" />
+                <span>
+                  {language === "om"
+                    ? "📖 Caasaa fi Adeemsa Hojiirraa (Descriptive Anatomy)"
+                    : "📖 In-Depth Descriptive Anatomy & Scenario"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-200 leading-relaxed">{result.descriptiveAnatomy}</p>
+            </div>
+          )}
 
           {/* Layer 1 & 2: Core Concept & Plain Language */}
           {(selectedLayer === "all" || selectedLayer === "plain") && (
