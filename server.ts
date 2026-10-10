@@ -468,6 +468,16 @@ async function startServer() {
     });
   });
 
+  // Download complete app source code zip
+  app.get("/api/download-zip", (_req, res) => {
+    const zipFilePath = path.resolve(process.cwd(), "public/qaxale-v3-source.zip");
+    res.download(zipFilePath, "qaxale-v3-source.zip", (err) => {
+      if (err && !res.headersSent) {
+        res.status(500).json({ error: "Failed to download app zip archive." });
+      }
+    });
+  });
+
   // -----------------------------------------------------------------------
   // POST /api/chat (Enhanced with QAXALE V3 Memory & Agency Loop)
   // -----------------------------------------------------------------------

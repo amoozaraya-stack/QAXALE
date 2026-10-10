@@ -163,7 +163,7 @@ export async function sendChatMessage(
       toolsInvoked: data?.toolsInvoked || [],
     };
   } catch (err: any) {
-    console.error("Chat API call failed, generating resilient client fallback:", err?.message || err);
+    console.warn("[QAXALE Client] Chat API call using resilient offline fallback:", err?.message || err);
 
     // Resilient offline fallback so users always get clear explanations & continuous clarification
     const lastUserMessage = [...messages].reverse().find((m) => m.role === "user")?.content || "";

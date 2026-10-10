@@ -712,6 +712,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const updateMessageInActiveConversation = (messageId: string, updates: Partial<ChatMessage>) => {
+    setConversations((prev) => {
+      const targetId = activeConversationId;
+      if (!targetId) return prev;
+
+      const updated = prev.map((conv) => {
+        if (conv.id === targetId) {
+          const updatedMessages = conv.messages.map((m) => {
+            if (m.id === messageId) {
+              return { ...m, ...updates };
+            }
+            return m;
+          });
+          const updatedConv: Conversation = {
+            ...conv,
+            messages: updatedMessages,
+            updatedAt: Date.now(),
+          };
+          saveConversationToFirestore(updatedConv).catch(() => {});
+          return updatedConv;
+        }
+        return conv;
+      });
+
+      return updated;
+    });
+  };
+
   const deleteConversation = (id: string) => {
     setConversations((prev) => {
       const filtered = prev.filter((c) => c.id !== id);
@@ -1121,6 +1149,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveConversationId,
         createConversation,
         addMessageToActiveConversation,
+        updateMessageInActiveConversation,
         deleteConversation,
         translationHistory,
         addTranslationToHistory,

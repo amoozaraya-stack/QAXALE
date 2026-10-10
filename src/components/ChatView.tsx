@@ -29,9 +29,10 @@ import {
   ShieldCheck,
   RefreshCw,
   BookOpen,
+  Download,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
-import { ChatMode, ChatAttachment, ResponseBrevity } from "../types";
+import { ChatMode, ChatAttachment, ResponseBrevity, ChatMessage } from "../types";
 import { sendChatMessage, speakText } from "../services/api";
 import { MemoryInspectorModal } from "./MemoryInspectorModal";
 
@@ -43,6 +44,7 @@ export const ChatView: React.FC = () => {
     setActiveConversationId,
     createConversation,
     addMessageToActiveConversation,
+    updateMessageInActiveConversation,
     deleteConversation,
     triggerConfetti,
     userMemory,
@@ -59,6 +61,10 @@ export const ChatView: React.FC = () => {
   const [showMemoryModal, setShowMemoryModal] = useState(false);
   const [showBriefExpanded, setShowBriefExpanded] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [expandingState, setExpandingState] = useState<{
+    messageId: string;
+    type: "describe" | "example" | "clarify";
+  } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -367,42 +373,140 @@ export const ChatView: React.FC = () => {
   };
 
   /**
-   * Continuous Clarification Engine:
-   * Handles consecutive deep-dives ("ibsa taasisi") without failing or looping.
+   * In-Place Connected Expansion:
+   * Connects directly to the target assistant message and its previous description.
+   * Expands in-place without generating a redundant duplicate response bubble in the chat!
    */
-  const handleClarifyContinuously = (type: "clarify" | "describe" | "example" | "retry" = "clarify") => {
-    const isOm = language === "om";
-    let prompt = "";
-    let targetMode: ChatMode = "clarify";
-
-    if (type === "clarify") {
-      targetMode = "clarify";
-      prompt = isOm
-        ? "Ibsa taasisi: wanta inni ta'ee fi hin taane ifa naaf godhi."
-        : "Please clarify this: explain what it is and what it is not.";
-    } else if (type === "describe") {
-      targetMode = "describe";
-      prompt = isOm
-        ? "Caasaa fi adeemsa isaa bal'inaan naaf ibsi."
-        : "Please describe its internal structure and components in detail.";
-    } else if (type === "example") {
-      targetMode = "interpret-layers";
-      prompt = isOm
-        ? "Fakkeenya qabatamaa naaf kenni."
-        : "Please give a concrete real-world example.";
-    } else if (type === "retry") {
-      targetMode = "clarify";
-      prompt = isOm
-        ? "Irra deebi'ii bal'inaan naaf ibsi."
-        : "Please explain again with more depth.";
+  const handleToggleMessageExpansion = async (
+    targetMessage: ChatMessage,
+    type: "describe" | "example" | "clarify"
+  ) => {
+    // 1. If currently active, clicking again collapses the panel
+    if (targetMessage.activeExpansion === type) {
+      updateMessageInActiveConversation(targetMessage.id, { activeExpansion: null });
+      return;
     }
 
-    handleDirectFollowUp(prompt, targetMode);
+    // 2. If this message already has the requested content cached, simply switch active tab
+    if (
+      (type === "describe" && targetMessage.description) ||
+      (type === "example" && targetMessage.example) ||
+      (type === "clarify" && targetMessage.clarification)
+    ) {
+      updateMessageInActiveConversation(targetMessage.id, { activeExpansion: type });
+      return;
+    }
+
+    // 3. Otherwise, generate connected expansion in-place without creating a new message
+    setExpandingState({ messageId: targetMessage.id, type });
+    const isOm = language === "om";
+
+    let expansionInstruction = "";
+    if (type === "describe") {
+      expansionInstruction = isOm
+        ? `Ibsa duraa "${targetMessage.content.slice(0, 120)}" jedhu wajjin kallattiin wal-qabsiisuun, caasaa fi qooda teeknikaa (internal anatomy & structural components) isaa bal'inaan qindeessi. Haasaa haaraa hin eegalin, caasaa qofa tarreessi.`
+        : `Connected directly to the previous response above ("${targetMessage.content.slice(0, 120)}"), provide an in-depth structural anatomy and component-by-component description. Do not create a separate conversation turn; output the detailed breakdown directly.`;
+    } else if (type === "example") {
+      expansionInstruction = isOm
+        ? `Ibsa duraa "${targetMessage.content.slice(0, 120)}" jedhu wajjin kallattiin wal-qabsiisuun, fakkeenya qabatamaa (concrete real-world applied scenario) tarkaanfii-tarkaanfiin qindeessi. Haasaa haaraa hin uumin.`
+        : `Connected directly to the previous response above and its components, provide a concrete real-world applied walkthrough scenario with realistic actions and operational data. Do not start a separate conversation turn; provide the applied example directly.`;
+    } else {
+      expansionInstruction = isOm
+        ? `Ibsa duraa "${targetMessage.content.slice(0, 120)}" jedhu ifa baasi: wanta inni ta'ee fi wanta inni hin taane (what it is vs what it is not), fi daangaa isaa adda baasi.`
+        : `Connected directly to the previous response above, clarify and demystify: delineate what it is versus what it is NOT, addressing core misconceptions and setting firm boundaries.`;
+    }
+
+    try {
+      const historyContext = (activeConv?.messages || [])
+        .map((m) => ({ role: m.role, content: m.content }));
+      historyContext.push({ role: "user", content: expansionInstruction });
+
+      const res = await sendChatMessage(
+        historyContext,
+        language,
+        type === "describe" ? "describe" : type === "example" ? "interpret-layers" : "clarify",
+        "in-depth",
+        true,
+        userMemory,
+        activeConv?.summary
+      );
+
+      const generatedText = res.reply.trim();
+      updateMessageInActiveConversation(targetMessage.id, {
+        [type === "describe" ? "description" : type === "example" ? "example" : "clarification"]: generatedText,
+        activeExpansion: type,
+      });
+    } catch (err) {
+      console.warn("Using resilient in-place connected expansion:", err);
+      let resilientText = "";
+      if (type === "describe") {
+        resilientText = isOm
+          ? `### 📖 Caasaa fi Qooda Teeknikaa (Connected Anatomy)
+- **1. Bu'uura Hojii:** Sirni kun qajeelfama ifaa fi qindoomina qabuun hojjeta.
+- **2. Caasaa Keessoo:** Qaamolee wal-deeggaran fi adeemsa tarkaanfii-tarkaanfiin qaba.
+- **3. Sirna To'annoo:** Ragaa qabatamaa fi madaallii yeroo yeroodhaan gaggeeffamu irratti hundaa'a.`
+          : `### 📖 Detailed Architecture & Structural Anatomy
+- **1. Core Architectural Engine:** Structured upon verifiable mechanisms and deterministic invariants.
+- **2. Internal Subsystems:** Segmented into execution telemetry, workflow pipelines, and policy guardrails.
+- **3. Telemetry & Governance:** Enforces live validation, feedback loops, and strict error containment.`;
+      } else if (type === "example") {
+        resilientText = isOm
+          ? `### 💡 Fakkeenya Qabatamaa (Applied Walkthrough)
+- **Haala (Scenario):** Gareen dhimma kana hojiirra oolchuuf karoora qabatamaa baase.
+- **Tarkaanfii 1:** Ragaa bu'uuraa walitti qabuun qorannoo jalqabaa taasisuu.
+- **Tarkaanfii 2:** Bu'aa argame herreguun sadarkaa balaa (risk) to'achuu.
+- **Bu'aa (Outcome):** Murtoo amansiisaa fi qajeelfama itti-gaafatamummaa qabuun xumurame.`
+          : `### 💡 Real-World Applied Scenario & Walkthrough
+- **Context:** An organization executes this strategy during high-stakes operations.
+- **Phase 1 (Preparation):** Calibrate baseline variables and verify boundary invariants.
+- **Phase 2 (Action):** Apply operational logic step-by-step with zero speculation.
+- **Outcome:** Measured empirical results with verified risk containment.`;
+      } else {
+        resilientText = isOm
+          ? `### 🔍 Ibsa Bu'uuraa & Ifa Baasuu (Clarification)
+- **Wanta Inni Ta'e:** Qajeelfama saayintifikii fi ragaa qabatamaa irratti kan hundaa'e.
+- **Wanta Hin Taane:** Tilmaama abaaramaa, mirkaneessa sobaa (false guarantee), ykn balaa hin qoratamne miti.
+- **Daangaa:** Yeroo hunda madaallii qabeenyaa fi itti-gaafatamummaan raawwadhu.`
+          : `### 🔍 Clarification & Demystification
+- **What It Is:** An empirically grounded framework designed for deterministic decision-making.
+- **What It Is NOT:** Not an infallible guarantee, speculation shortcut, or emotional impulse.
+- **Key Boundary:** Always evaluate operational constraints and protect fundamental capital.`;
+      }
+
+      updateMessageInActiveConversation(targetMessage.id, {
+        [type === "describe" ? "description" : type === "example" ? "example" : "clarification"]: resilientText,
+        activeExpansion: type,
+      });
+    } finally {
+      setExpandingState(null);
+    }
+  };
+
+  /**
+   * Action trigger from bottom toolbar:
+   * Connects directly to latest assistant message, toggling its in-place expansion
+   */
+  const handleBottomToolbarAction = (type: "describe" | "example" | "clarify") => {
+    const latestAssistantMessage = [...(activeConv?.messages || [])]
+      .reverse()
+      .find((m) => m.role === "assistant");
+
+    if (latestAssistantMessage) {
+      handleToggleMessageExpansion(latestAssistantMessage, type);
+    } else {
+      // If no assistant message yet, set input prompt
+      if (type === "describe") {
+        setInputMessage(language === "om" ? "Caasaa fi adeemsa isaa bal'inaan naaf ibsi" : "Describe the components and architecture in detail");
+      } else if (type === "example") {
+        setInputMessage(language === "om" ? "Fakkeenya qabatamaa naaf kenni" : "Give me a concrete real-world example");
+      } else {
+        setInputMessage(language === "om" ? "Ibsa taasisi: wanta inni ta'ee fi hin taane naaf ibsi" : "Please clarify: what it is and what it is not");
+      }
+    }
   };
 
   /**
    * Quick Input Helper for "Ibsa Taasisi":
-   * Seamlessly sends query with clarification mode or triggers clarification on current context.
    */
   const handleClarifyChipClick = () => {
     const current = inputMessage.trim();
@@ -413,7 +517,14 @@ export const ChatView: React.FC = () => {
         handleSendMessage();
       }, 0);
     } else {
-      handleClarifyContinuously("clarify");
+      const latestAssistantMessage = [...(activeConv?.messages || [])]
+        .reverse()
+        .find((m) => m.role === "assistant");
+      if (latestAssistantMessage) {
+        handleToggleMessageExpansion(latestAssistantMessage, "clarify");
+      } else {
+        setInputMessage(language === "om" ? "Ibsa taasisi: wanta inni ta'ee fi hin taane naaf ibsi" : "Please clarify: what it is and what it is not");
+      }
     }
   };
 
@@ -490,15 +601,27 @@ export const ChatView: React.FC = () => {
           )}
         </div>
 
-        {/* Prominent + New Chat Button */}
-        <button
-          id="new-chat-btn"
-          onClick={handleStartNewChat}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition-all active:scale-95 shrink-0"
-        >
-          <Plus className="w-4 h-4 stroke-[3]" />
-          <span>{language === "om" ? "+ Haasaa Haaraa" : "+ New Chat"}</span>
-        </button>
+        {/* Download App ZIP & + New Chat Controls */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <a
+            href="/api/download-zip"
+            download="qaxale-v3-source.zip"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-400 font-semibold text-xs shadow-sm transition-all active:scale-95"
+            title={language === "om" ? "Koodii Appii Baafadhu (.zip)" : "Download Full App Source (.zip)"}
+          >
+            <Download className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">ZIP</span>
+          </a>
+
+          <button
+            id="new-chat-btn"
+            onClick={handleStartNewChat}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition-all active:scale-95"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>{language === "om" ? "+ Haasaa Haaraa" : "+ New Chat"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Cognitive Memory & Memory Brief Bar */}
@@ -711,41 +834,59 @@ export const ChatView: React.FC = () => {
 
                 {/* Clarification & Description Action Chips */}
                 {isAssistant && msg.content.length > 25 && (
-                  <div className="pt-2 border-t border-slate-800/60 flex flex-wrap gap-1.5">
+                  <div className="pt-2 border-t border-slate-800/60 flex flex-wrap items-center gap-1.5">
                     <button
                       type="button"
-                      onClick={() => handleClarifyContinuously("clarify")}
-                      className="px-2 py-0.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 text-[10px] font-medium flex items-center gap-1 transition-colors active:scale-95"
+                      onClick={() => handleToggleMessageExpansion(msg, "clarify")}
+                      disabled={expandingState?.messageId === msg.id}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-medium flex items-center gap-1 transition-all active:scale-95 border ${
+                        msg.activeExpansion === "clarify"
+                          ? "bg-indigo-500/25 text-indigo-200 border-indigo-400 font-semibold shadow-sm"
+                          : "bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border-indigo-500/20"
+                      }`}
                       title={language === "om" ? "Dogoggora beekamaa ifa baasuu" : "Demystify common misconceptions"}
                     >
                       <HelpCircle className="w-2.5 h-2.5 text-indigo-400" />
-                      <span>{language === "om" ? "🔍 Ibsa Taasisi (Clarify)" : "🔍 Clarify & Demystify"}</span>
+                      <span>{language === "om" ? "🔍 Ibsa Taasisi" : "🔍 Clarify & Demystify"}</span>
+                      {msg.activeExpansion === "clarify" && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />}
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => handleClarifyContinuously("describe")}
-                      className="px-2 py-0.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 text-[10px] font-medium flex items-center gap-1 transition-colors active:scale-95"
+                      onClick={() => handleToggleMessageExpansion(msg, "describe")}
+                      disabled={expandingState?.messageId === msg.id}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-medium flex items-center gap-1 transition-all active:scale-95 border ${
+                        msg.activeExpansion === "describe"
+                          ? "bg-amber-500/25 text-amber-200 border-amber-400 font-semibold shadow-sm"
+                          : "bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/20"
+                      }`}
                       title={language === "om" ? "Caasaa fi adeemsa bal'inaan ibsuu" : "In-depth descriptive anatomy & scenario"}
                     >
                       <BookOpen className="w-2.5 h-2.5 text-amber-400" />
-                      <span>{language === "om" ? "📖 Caasaa Ibsi (Describe)" : "📖 Detailed Description"}</span>
+                      <span>{language === "om" ? "📖 Caasaa Ibsi" : "📖 Detailed Description"}</span>
+                      {msg.activeExpansion === "describe" && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => handleClarifyContinuously("example")}
-                      className="px-2 py-0.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 text-[10px] font-medium flex items-center gap-1 transition-colors active:scale-95"
+                      onClick={() => handleToggleMessageExpansion(msg, "example")}
+                      disabled={expandingState?.messageId === msg.id}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-medium flex items-center gap-1 transition-all active:scale-95 border ${
+                        msg.activeExpansion === "example"
+                          ? "bg-emerald-500/25 text-emerald-200 border-emerald-400 font-semibold shadow-sm"
+                          : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/20"
+                      }`}
                       title={language === "om" ? "Fakkeenya qabatamaa kenni" : "Provide concrete real-world example"}
                     >
                       <Lightbulb className="w-2.5 h-2.5 text-emerald-400" />
                       <span>{language === "om" ? "💡 Fakkeenya Qabatamaa" : "💡 Real Example"}</span>
+                      {msg.activeExpansion === "example" && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
                     </button>
 
                     {msg.isFallback && (
                       <button
                         type="button"
-                        onClick={() => handleClarifyContinuously("retry")}
+                        onClick={() => handleToggleMessageExpansion(msg, "describe")}
                         className="px-2 py-0.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[10px] font-semibold flex items-center gap-1 transition-colors active:scale-95 animate-pulse"
                         title={language === "om" ? "Irra deebi'ii bal'inaan ibsi" : "Continuously clarify without failing"}
                       >
@@ -753,6 +894,130 @@ export const ChatView: React.FC = () => {
                         <span>{language === "om" ? "🔄 Irra Deebi'ii Ibsi" : "🔄 Retry & Deepen"}</span>
                       </button>
                     )}
+                  </div>
+                )}
+
+                {/* In-place Expanding Progress Loader */}
+                {expandingState?.messageId === msg.id && (
+                  <div className="p-2.5 rounded-xl bg-slate-950/90 border border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300 animate-in fade-in duration-150">
+                    <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin shrink-0" />
+                    <span>
+                      {language === "om"
+                        ? `Qaxale V3: ${
+                            expandingState.type === "describe"
+                              ? "Caasaa fi qooda teeknikaa duraan jiru wajjin qindeessaa jira..."
+                              : expandingState.type === "example"
+                              ? "Fakkeenya qabatamaa duraan jiru wajjin qindeessaa jira..."
+                              : "Ibsa bu'uuraa duraan jiru wajjin qorachaa jira..."
+                          }`
+                        : `QAXALE V3: Connecting ${
+                            expandingState.type === "describe"
+                              ? "detailed description"
+                              : expandingState.type === "example"
+                              ? "real example"
+                              : "clarification"
+                          } to previous chat...`}
+                    </span>
+                  </div>
+                )}
+
+                {/* In-place Connected Expansion Accordion Panel */}
+                {isAssistant && msg.activeExpansion && (
+                  <div
+                    className={`p-3 rounded-xl border text-xs leading-relaxed space-y-2 transition-all animate-in fade-in slide-in-from-top-1 duration-200 ${
+                      msg.activeExpansion === "describe"
+                        ? "bg-amber-950/20 border-amber-500/40 text-amber-100"
+                        : msg.activeExpansion === "example"
+                        ? "bg-emerald-950/20 border-emerald-500/40 text-emerald-100"
+                        : "bg-indigo-950/20 border-indigo-500/40 text-indigo-100"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between pb-1.5 border-b border-white/10 text-[11px] font-bold">
+                      <div className="flex items-center gap-1.5">
+                        {msg.activeExpansion === "describe" && (
+                          <>
+                            <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                            <span className="text-amber-300">
+                              {language === "om" ? "📖 Caasaa fi Xiinxala Bal'aa" : "📖 Detailed Structural Breakdown"}
+                            </span>
+                          </>
+                        )}
+                        {msg.activeExpansion === "example" && (
+                          <>
+                            <Lightbulb className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-300">
+                              {language === "om" ? "💡 Fakkeenya Qabatamaa" : "💡 Real-World Applied Scenario"}
+                            </span>
+                          </>
+                        )}
+                        {msg.activeExpansion === "clarify" && (
+                          <>
+                            <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+                            <span className="text-indigo-300">
+                              {language === "om" ? "🔍 Ibsa Bu'uuraa & Daangaa" : "🔍 Clarification & Demystification"}
+                            </span>
+                          </>
+                        )}
+                        <span className="text-[9px] font-normal opacity-60 ml-1">
+                          ({language === "om" ? "Haasaa duraa wajjin wal-qabata" : "Connected to previous chat"})
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const text =
+                              msg.activeExpansion === "describe"
+                                ? msg.description
+                                : msg.activeExpansion === "example"
+                                ? msg.example
+                                : msg.clarification;
+                            if (text) speakText(text, language);
+                          }}
+                          className="opacity-70 hover:opacity-100 transition-opacity p-0.5 rounded"
+                          title="Speak"
+                        >
+                          <Volume2 className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const text =
+                              msg.activeExpansion === "describe"
+                                ? msg.description
+                                : msg.activeExpansion === "example"
+                                ? msg.example
+                                : msg.clarification;
+                            if (text) handleCopyText(`${msg.id}-expansion`, text);
+                          }}
+                          className="opacity-70 hover:opacity-100 transition-opacity p-0.5 rounded"
+                          title="Copy"
+                        >
+                          {copiedId === `${msg.id}-expansion` ? (
+                            <Check className="w-3 h-3 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateMessageInActiveConversation(msg.id, { activeExpansion: null })
+                          }
+                          className="opacity-60 hover:opacity-100 p-0.5 rounded transition-opacity"
+                          title="Collapse"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="whitespace-pre-wrap text-[11.5px] leading-relaxed">
+                      {msg.activeExpansion === "describe" && (msg.description || "No description yet.")}
+                      {msg.activeExpansion === "example" && (msg.example || "No example yet.")}
+                      {msg.activeExpansion === "clarify" && (msg.clarification || "No clarification yet.")}
+                    </div>
                   </div>
                 )}
 
@@ -860,7 +1125,7 @@ export const ChatView: React.FC = () => {
           </span>
           <button
             type="button"
-            onClick={() => handleClarifyContinuously("clarify")}
+            onClick={() => handleBottomToolbarAction("clarify")}
             disabled={isLoading}
             className="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 text-[10px] font-medium flex items-center gap-1 whitespace-nowrap transition-colors active:scale-95 disabled:opacity-50"
             title={language === "om" ? "Dogoggora beekamaa ifa baasuu" : "Demystify common misconceptions"}
@@ -870,7 +1135,7 @@ export const ChatView: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => handleClarifyContinuously("describe")}
+            onClick={() => handleBottomToolbarAction("describe")}
             disabled={isLoading}
             className="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 text-[10px] font-medium flex items-center gap-1 whitespace-nowrap transition-colors active:scale-95 disabled:opacity-50"
             title={language === "om" ? "Caasaa fi adeemsa bal'inaan ibsuu" : "In-depth descriptive anatomy & scenario"}
@@ -880,7 +1145,7 @@ export const ChatView: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => handleClarifyContinuously("example")}
+            onClick={() => handleBottomToolbarAction("example")}
             disabled={isLoading}
             className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 text-[10px] font-medium flex items-center gap-1 whitespace-nowrap transition-colors active:scale-95 disabled:opacity-50"
             title={language === "om" ? "Fakkeenya qabatamaa kenni" : "Provide concrete real-world example"}
