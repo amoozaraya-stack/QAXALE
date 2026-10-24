@@ -1,4 +1,4 @@
-# QAXALE-AI
+# QAXALE
 
 **QAXALE — Afaan Oromoo-first Advanced AI Intelligence Platform**  
 Built by **Hamza Yasin** under **ORONID TECH**
@@ -10,6 +10,9 @@ Built by **Hamza Yasin** under **ORONID TECH**
 QAXALE is an Afaan Oromoo-first advanced AI intelligence platform that combines intelligent conversation, autonomous agents, learning systems, document analysis, and decision-making tools into one unified multi-user experience.
 
 It is designed to make powerful AI accessible, practical, and culturally relevant — with strong support for both **Afaan Oromoo** and **English**.
+
+The central philosophy is:
+> *"Understand first. Analyze intelligently. Decide responsibly."*
 
 ---
 
@@ -57,8 +60,8 @@ Comprehensive engineering specifications are available in the [`docs/`](./docs) 
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/amoozaraya-stack/Qaxale-advanceD.git
-cd Qaxale-advanceD
+git clone https://github.com/amoozaraya-stack/QAXALE.git
+cd QAXALE
 ```
 
 2. **Install dependencies**
