@@ -8,8 +8,14 @@ dist/
 build/
 out/
 server.js
+# Binary Archives & Packages
 *.tar.gz
 *.zip
+*.tgz
+*.rar
+*.7z
+public/*.tar.gz
+public/*.zip
 
 # Environment Files & Secrets (Never commit secrets)
 .env
