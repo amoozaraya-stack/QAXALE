@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 1. User Profiles & Progress (/users/{userId})
+    // Strictly accessible by the authenticated owner. Listing is forbidden.
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && isValidId(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && isValidId(userId) && request.resource.data.userId == userId;
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // Long-term Semantic Memory Items (/users/{userId}/memories/{memoryId})
+      match /memories/{memoryId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(memoryId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isValidId(memoryId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(memoryId);
+      }
+
+      // Episodic Conversation Briefs (/users/{userId}/episodes/{episodeId})
+      match /episodes/{episodeId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(episodeId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && isValidId(episodeId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId) && isValidId(episodeId);
+      }
+    }
+
+    // 2. Chat Conversations (/conversations/{conversationId})
+    // Strictly accessible by the owning user. List queries must filter by userId.
+    match /conversations/{conversationId} {
+      allow get: if isSignedIn() && isValidId(conversationId) && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(conversationId) && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(conversationId) && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && isValidId(conversationId) && resource.data.userId == request.auth.uid;
+    }
+
+    // 3. Autonomous Tasks & Missions (/autonomous_tasks/{taskId})
+    // Strictly accessible by the owning user. List queries must filter by userId.
+    match /autonomous_tasks/{taskId} {
+      allow get: if isSignedIn() && isValidId(taskId) && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(taskId) && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(taskId) && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && isValidId(taskId) && resource.data.userId == request.auth.uid;
+    }
+
+    // 4. Connection Health Check (/test/{docId})
+    // Read-only single-doc check for testConnection() startup verification
+    match /test/{docId} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
+    // 5. Default Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

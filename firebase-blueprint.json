@@ -1,0 +1,102 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profiles & Progress",
+      "description": "Stores user learning progress, streak, stats, and preferences",
+      "properties": {
+        "userId": { "type": "string", "description": "Unique user identifier or device identifier" },
+        "language": { "type": "string", "description": "Preferred language (om | en)" },
+        "streakDays": { "type": "number", "description": "Current learning streak days" },
+        "totalTermsMastered": { "type": "number", "description": "Count of mastered tech terms" },
+        "totalChallengesCompleted": { "type": "number", "description": "Count of completed challenges" },
+        "totalTranslations": { "type": "number", "description": "Count of translations made" },
+        "totalCodeExplains": { "type": "number", "description": "Count of code snippets explained" },
+        "masteredTerms": { "type": "array", "description": "List of mastered vocabulary term IDs" },
+        "bookmarkedTerms": { "type": "array", "description": "List of bookmarked vocabulary term IDs" },
+        "completedChallengeIds": { "type": "array", "description": "List of completed challenge IDs" },
+        "level": { "type": "number", "description": "User learning level" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+      },
+      "required": ["userId", "language"]
+    },
+    "conversations": {
+      "title": "Chat Conversations",
+      "description": "User AI conversation sessions",
+      "properties": {
+        "id": { "type": "string", "description": "Conversation ID" },
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "title": { "type": "string", "description": "Conversation summary title" },
+        "language": { "type": "string", "description": "Conversation language" },
+        "mode": { "type": "string", "description": "Chat mode (standard, feynman, agency-loop, code-builder, socratic)" },
+        "messages": {
+          "type": "array",
+          "description": "Turn-by-turn chat history messages",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "role": { "type": "string" },
+              "content": { "type": "string" },
+              "timestamp": { "type": "number" },
+              "fallback": { "type": "boolean" }
+            }
+          }
+        },
+        "createdAt": { "type": "number", "description": "Creation timestamp" },
+        "updatedAt": { "type": "number", "description": "Last message timestamp" }
+      },
+      "required": ["id", "userId", "messages"]
+    },
+    "autonomous_tasks": {
+      "title": "Autonomous Agent Tasks & Missions",
+      "description": "Stores autonomous missions, cognitive step logs, tool telemetry, and executive dossiers",
+      "properties": {
+        "id": { "type": "string", "description": "Mission task identifier" },
+        "userId": { "type": "string", "description": "Owner user identifier" },
+        "title": { "type": "string", "description": "Mission title" },
+        "goal": { "type": "string", "description": "High-level autonomous objective" },
+        "domain": { "type": "string", "description": "Domain category" },
+        "autonomyMode": { "type": "string", "description": "Autonomy level: full or human-in-the-loop" },
+        "status": { "type": "string", "description": "Execution status" },
+        "confidenceScore": { "type": "number", "description": "Calculated confidence percentage" },
+        "steps": { "type": "array", "description": "Telemetry logs of tool execution steps" },
+        "synthesis": { "type": "object", "description": "Synthesized executive dossier and recommendations" },
+        "createdAt": { "type": "number", "description": "Creation epoch" },
+        "updatedAt": { "type": "number", "description": "Last update epoch" }
+      },
+      "required": ["id", "userId", "goal", "status"]
+    },
+    "memories": {
+      "title": "Long-Term Semantic Memory Items",
+      "description": "User knowledge items, preferences, goals, and domain facts stored under /users/{userId}/memories/{memoryId}",
+      "properties": {
+        "id": { "type": "string", "description": "Memory unique ID" },
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "category": { "type": "string", "description": "Category: personalization | goals | interests | projects | learning | communication | facts" },
+        "content": { "type": "string", "description": "Crisp declarative factual statement" },
+        "confidence": { "type": "number", "description": "Confidence score 0.0 to 1.0" },
+        "source": { "type": "string", "description": "Origin of memory: user-stated | ai-inferred | system | manual" },
+        "tags": { "type": "array", "description": "Searchable tags" },
+        "isActive": { "type": "boolean", "description": "Whether memory is currently active" },
+        "createdAt": { "type": "number", "description": "Creation timestamp epoch" },
+        "updatedAt": { "type": "number", "description": "Update timestamp epoch" }
+      },
+      "required": ["id", "userId", "category", "content", "confidence", "isActive"]
+    },
+    "episodes": {
+      "title": "Episodic Conversation Briefs",
+      "description": "Conversation summary briefs and key takeaways stored under /users/{userId}/episodes/{episodeId}",
+      "properties": {
+        "id": { "type": "string", "description": "Episode unique ID" },
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "conversationId": { "type": "string", "description": "Associated conversation ID" },
+        "title": { "type": "string", "description": "Session topic title" },
+        "summary": { "type": "string", "description": "Synthesized episodic summary" },
+        "keyTakeaways": { "type": "array", "description": "List of key decisions, discoveries, and takeaways" },
+        "topics": { "type": "array", "description": "Identified topics" },
+        "timestamp": { "type": "number", "description": "Timestamp epoch" }
+      },
+      "required": ["id", "userId", "conversationId", "summary", "timestamp"]
+    }
+  }
+}
